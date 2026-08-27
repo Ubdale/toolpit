@@ -168,6 +168,37 @@ export const tools: Tool[] = [
     related: ['/pdf/images-to-pdf', '/pdf/split', '/svg/image-to-svg', '/pdf/compress'],
   },
 
+  {
+    href: '/pdf/excel-to-pdf',
+    category: 'pdf',
+    status: 'live',
+    name: 'Excel to PDF',
+    summary: 'Turn a spreadsheet into a clean, paginated PDF.',
+    title: 'Convert Excel to PDF Free — XLSX & CSV, No Upload | Toolpit',
+    description:
+      'Convert XLSX, XLS, ODS or CSV spreadsheets into a PDF in your browser. Free, no signup, no watermark, and your data never leaves your device.',
+    h1: 'Convert Excel to PDF',
+    intro:
+      'Turn a spreadsheet into a PDF anyone can open, with columns that line up and headers repeated on every page. Pick the sheets you want, choose the page size, and download — all processed on your own machine, so financial and personal data never goes near a server.',
+    keywords: ['excel to pdf', 'xlsx to pdf', 'csv to pdf', 'spreadsheet to pdf'],
+    related: ['/pdf/pdf-to-excel', '/pdf/merge', '/pdf/compress', '/pdf/images-to-pdf'],
+  },
+  {
+    href: '/pdf/pdf-to-excel',
+    category: 'pdf',
+    status: 'live',
+    name: 'PDF to Excel',
+    summary: 'Pull tables out of a PDF into a spreadsheet.',
+    title: 'Convert PDF to Excel Free — Extract Tables, No Upload | Toolpit',
+    description:
+      'Extract tables from a PDF into an XLSX or CSV spreadsheet, right in your browser. Free, no signup, no watermark, and your document is never uploaded.',
+    h1: 'Convert a PDF to Excel',
+    intro:
+      'Get the numbers out of a PDF and back into a spreadsheet you can actually work with. Toolpit reads the text layer, rebuilds the rows and columns, and hands you an XLSX or CSV — entirely on your device, which matters when the document is an invoice, a statement or a payroll report.',
+    keywords: ['pdf to excel', 'pdf to xlsx', 'extract table from pdf', 'pdf to csv'],
+    related: ['/pdf/excel-to-pdf', '/pdf/to-images', '/pdf/split', '/pdf/merge'],
+  },
+
   // ---------------------------------------------------------------- Phase 2
   {
     href: '/svg/image-to-svg',

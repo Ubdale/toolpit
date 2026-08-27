@@ -91,12 +91,13 @@ inline script.
 
 ## What is built
 
-All thirteen tools are live.
+All fifteen tools are live.
 
 | Area | Tools | Engine |
 |---|---|---|
 | PDF | Merge, split, reorder/rotate, compress, images→PDF, PDF→images | `pdf-lib` + `pdfjs-dist` |
-| Vector | SVG optimizer, image→SVG tracer, favicon generator | `svgo`, `imagetracerjs`, canvas |
+| Spreadsheets | Excel→PDF, PDF→Excel (table reconstruction) | SheetJS + `pdf-lib` / `pdfjs-dist` |
+| Vector | SVG optimizer, image→vector tracer (SVG/PDF/AI/EPS), favicon generator | `svgo`, VTracer wasm, canvas |
 | AI image | Background remover (+ matte refinement and backdrops), upscaler (three model sizes), object removal (crop-to-mask, undo/redo) | `@imgly/background-removal`, UpscalerJS/TF.js, MI-GAN via `onnxruntime-web` |
 | Capture | Screen recorder with live annotation and trim | `getDisplayMedia` + `MediaRecorder` |
 
@@ -132,6 +133,22 @@ hand-declares the small surface we use.
 Inference runs single-threaded on purpose: multithreading needs
 `SharedArrayBuffer`, which needs cross-origin isolation, which would break the
 cross-origin model fetches.
+
+### Two conversions worth understanding
+
+**Image → vector** runs on VTracer, which clusters colour regions and fits real
+splines, and exports through [`lib/vector/export.ts`](lib/vector/export.ts) to
+SVG, a true vector PDF, an Illustrator-compatible `.ai` (the same PDF bytes —
+Illustrator has opened PDF natively since v9), or EPS. Both writers speak only
+lines and cubics, so [`lib/vector/path.ts`](lib/vector/path.ts) normalises
+relative commands, shorthand curves, quadratics and elliptical arcs first.
+
+**PDF → Excel** is inference, not extraction: a PDF stores glyphs at
+coordinates and has no concept of a table. Text is grouped into rows by
+baseline, split into cells on horizontal gaps, then aligned by clustering cell
+left-edges across the whole page — which is what keeps a value under its own
+heading when other rows have blanks. It is honest about its limits: pages with
+no text layer are reported as scans rather than returned silently empty.
 
 ### Why the AI tools are more than a model call
 
