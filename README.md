@@ -77,7 +77,13 @@ inline script.
 
 ### Keeping the promise honest
 
-- No API routes, no server actions, no analytics.
+- No API routes and no server actions — nothing exists that could receive a
+  file.
+- Two Vercel scripts report something: Analytics (page views) and Speed
+  Insights (real-user web-vitals timings). Both are cookieless, and neither
+  can see a file — not by policy but by construction, since no file is ever
+  part of a request. Both are disclosed on `/privacy`; if you add anything
+  else that phones home, disclose it there too or the page becomes a lie.
 - **A user's file bytes live in React state and nowhere else** — never written
   to storage, never attached to a request.
 - Two things *are* written to the browser, and neither is user content: the

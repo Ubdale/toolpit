@@ -1,3 +1,5 @@
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 
@@ -77,6 +79,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <Footer />
+        {/* Page views and real-user performance timings. Neither can see a file
+            you opened, because no file is ever part of a request — but both do
+            report something, so both are disclosed on /privacy rather than left
+            unmentioned. */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

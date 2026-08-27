@@ -62,6 +62,24 @@ export default function PrivacyPage() {
             removes it.
           </p>
 
+          <h2 className="mt-10 text-heading">What is measured</h2>
+          <p className="mt-3 text-muted">
+            Two Vercel scripts do report something, and it would be dishonest to leave them
+            unmentioned on a page like this. <strong className="text-text">Analytics</strong>
+            {' '}counts page views — which tool pages people open, roughly where in the world from,
+            and which site sent them. <strong className="text-text">Speed Insights</strong> records
+            how quickly pages actually load for real visitors: standard web-vitals timings and a
+            coarse device class.
+          </p>
+          <p className="mt-3 text-muted">
+            Both are cookieless and neither builds a profile of you or follows you to other sites.
+            More to the point, neither can see a file you opened — not because they promise not to,
+            but because your files are never part of any request in the first place. That is the
+            part of this page that is structural rather than a policy. If you would rather send
+            nothing at all, any content blocker will stop both, and every tool keeps working
+            exactly as before.
+          </p>
+
           <h2 className="mt-10 text-heading">Hosting</h2>
           <p className="mt-3 text-muted">
             The site is served as static files. Like any web host, the CDN that delivers those
