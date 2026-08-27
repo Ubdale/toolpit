@@ -20,6 +20,9 @@ export default function ExcelToPdfTool() {
   const [options, setOptions] = useState<SheetPdfOptions>(defaultSheetPdfOptions);
   const [progress, setProgress] = useState<number | null>(null);
   const [result, setResult] = useState<Blob | null>(null);
+  const [notes, setNotes] = useState<{ substitutions: number; bandedSheets: string[] } | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [isReading, setIsReading] = useState(false);
 
@@ -68,10 +71,11 @@ export default function ExcelToPdfTool() {
     try {
       const chosen = tables.filter((table) => selected.has(table.name));
       if (chosen.length === 0) throw new Error('Pick at least one sheet.');
-      const bytes = await tablesToPdf(chosen, options, (done, total) =>
+      const output = await tablesToPdf(chosen, options, (done, total) =>
         setProgress(total > 0 ? done / total : null),
       );
-      setResult(toPdfBlob(bytes));
+      setResult(toPdfBlob(output.bytes));
+      setNotes({ substitutions: output.substitutions, bandedSheets: output.bandedSheets });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not build the PDF.');
     } finally {
@@ -84,6 +88,7 @@ export default function ExcelToPdfTool() {
     setTables([]);
     setSelected(new Set());
     setResult(null);
+    setNotes(null);
     setError(null);
   }
 
@@ -100,7 +105,28 @@ export default function ExcelToPdfTool() {
         detail={`${selected.size} sheet${selected.size === 1 ? '' : 's'} · ${rows} rows`}
         target={{ blob: result, filename }}
         onReset={reset}
-      />
+      >
+        {notes && (notes.substitutions > 0 || notes.bandedSheets.length > 0) ? (
+          <div className="flex flex-col gap-2 text-sm text-muted">
+            {notes.bandedSheets.length > 0 ? (
+              <p>
+                {notes.bandedSheets.join(', ')} {notes.bandedSheets.length === 1 ? 'was' : 'were'}{' '}
+                too wide for one page, so the columns are split across bands. The first column is
+                repeated on each band so rows stay identifiable.
+              </p>
+            ) : null}
+            {notes.substitutions > 0 ? (
+              <p>
+                {notes.substitutions} character{notes.substitutions === 1 ? '' : 's'} had no
+                equivalent in the PDF font and {notes.substitutions === 1 ? 'was' : 'were'}{' '}
+                approximated — arrows became <code className="font-mono">-&gt;</code>, tick marks
+                became <code className="font-mono">Yes</code>, and anything with no near match
+                became <code className="font-mono">?</code>. Your spreadsheet is untouched.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </ResultPanel>
     );
   }
 
@@ -202,6 +228,22 @@ export default function ExcelToPdfTool() {
             <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-3">
               <input
                 type="checkbox"
+                checked={options.bandWideSheets}
+                onChange={(event) =>
+                  setOptions((c) => ({ ...c, bandWideSheets: event.target.checked }))
+                }
+                className="mt-0.5 size-4 accent-accent"
+              />
+              <span>
+                <span className="block text-sm font-medium">Split wide sheets</span>
+                <span className="mt-0.5 block text-xs text-muted">
+                  Bands the columns across pages instead of shrinking them.
+                </span>
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-3">
+              <input
+                type="checkbox"
                 checked={options.gridlines}
                 onChange={(event) => setOptions((c) => ({ ...c, gridlines: event.target.checked }))}
                 className="mt-0.5 size-4 accent-accent"
@@ -218,8 +260,9 @@ export default function ExcelToPdfTool() {
           <p className="rounded-xl border border-line bg-sunken px-3.5 py-3 text-xs text-muted">
             This produces a readable report of your data — cell values, aligned columns, repeated
             headers. It does not recreate fonts, colours, merged cells or charts, because a
-            spreadsheet&rsquo;s appearance cannot be rebuilt from its values alone. Sheets wider
-            than the page are scaled down to fit rather than cropped.
+            spreadsheet&rsquo;s appearance cannot be rebuilt from its values alone. Sheets too
+            wide for one page are split across column bands rather than cropped or crushed, and
+            characters the PDF font cannot encode are approximated.
           </p>
 
           {isBusy ? <ProgressBar value={progress} label="Laying out the pages…" /> : null}
