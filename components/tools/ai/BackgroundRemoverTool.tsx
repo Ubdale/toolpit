@@ -15,20 +15,40 @@ import { ModelNotice, ModelProgress } from './ModelNotice';
 
 const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/avif'];
 
-// isnet_fp16 is the quality/size sweet spot; quint8 halves the download again
-// at a visible cost on hair and soft edges.
+// Sizes are the real byte counts from the library's resources.json, not
+// estimates: this is the number a visitor on a metered connection is agreeing
+// to, so it has to be right. (isnet full precision is 176 MB and not offered.)
 const QUALITIES = {
-  isnet_fp16: { label: 'Balanced', bytes: 44_000_000, note: 'Best all-round. ~44 MB model.' },
-  isnet_quint8: { label: 'Light', bytes: 22_000_000, note: 'Half the download, softer edges. ~22 MB.' },
+  isnet_quint8: {
+    label: 'Light',
+    bytes: 44_348_940,
+    note: 'Quantized. Fastest, and half the download. Softer on hair and fur.',
+  },
+  isnet_fp16: {
+    label: 'Balanced',
+    bytes: 88_152_708,
+    note: 'Cleaner edges on fine detail, at twice the download.',
+  },
 } as const;
 
 type Quality = keyof typeof QUALITIES;
 type Backdrop = 'transparent' | '#ffffff' | '#000000' | 'custom';
 
+/**
+ * Inference device for the segmentation model.
+ *
+ * 'cpu' means the wasm backend. Not 'gpu': this library loads ORT's JS glue
+ * from node_modules but fetches the matching wasm binary from its own CDN, so
+ * the two only agree when onnxruntime-web is exactly the 1.21.0 it pins as a
+ * peer — see the note in package.json. The wasm path is the one that pairing is
+ * tested against; the WebGPU path is not.
+ */
+const INFERENCE_DEVICE = 'cpu' as const;
+
 export default function BackgroundRemoverTool() {
   const [file, setFile] = useState<File | null>(null);
   const [sourceUrl, setSourceUrl] = useState<string | null>(null);
-  const [quality, setQuality] = useState<Quality>('isnet_fp16');
+  const [quality, setQuality] = useState<Quality>('isnet_quint8');
   const [backdrop, setBackdrop] = useState<Backdrop>('transparent');
   const [customColor, setCustomColor] = useState('#d1541f');
   const [cutout, setCutout] = useState<{ blob: Blob; url: string } | null>(null);
@@ -79,8 +99,7 @@ export default function BackgroundRemoverTool() {
       const blob = await removeBackground(file, {
         model: quality,
         output: { format: 'image/png' },
-        // WebGPU where the browser has it; the library falls back on its own.
-        device: typeof navigator !== 'undefined' && 'gpu' in navigator ? 'gpu' : 'cpu',
+        device: INFERENCE_DEVICE,
         progress: (key: string, current: number, total: number) => {
           // Keys look like "fetch:/models/isnet" during download and
           // "compute:inference" once the model is running.

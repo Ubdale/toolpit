@@ -111,14 +111,23 @@ never travels anywhere.
 
 | Tool | Weights | Source |
 |---|---|---|
-| Background remover | ~22–44 MB (ISNet) | `staticimgly.com`, the library's own CDN |
+| Background remover | 44 MB (ISNet quantized) or 88 MB (fp16) | `staticimgly.com`, the library's own CDN |
 | Upscaler | ~1 MB (ESRGAN-slim) | Bundled — small enough not to warrant a fetch |
 | Object removal | 28 MB (MI-GAN pipeline) | Hugging Face, cached via the Cache Storage API |
 
 The ONNX Runtime WebAssembly build is served from our own origin: the `/wasm`
-entry (CPU only) rather than the default, which would pull a second 26 MB JSEP
-binary for no gain. `scripts/copy-pdf-worker.mjs` copies it, and the pdf.js
+entry (CPU only) rather than the default, which would pull a second, much larger
+JSEP binary for no gain. `scripts/copy-pdf-worker.mjs` copies it, and the pdf.js
 worker, into `public/` at build time — both are gitignored.
+
+**`onnxruntime-web` is pinned to exactly 1.21.0 and should not be bumped
+casually.** `@imgly/background-removal` declares it as an exact peer, loads
+ORT's JavaScript from `node_modules`, and fetches the matching wasm binary from
+its own CDN. Any other version pairs mismatched glue with that binary and the
+background remover dies with `_OrtGetInputOutputMetadata is not a function`
+after a 44 MB download. That version ships no `types` conditions in its export
+map, which is why [`types/onnxruntime-web.d.ts`](types/onnxruntime-web.d.ts)
+hand-declares the small surface we use.
 
 Inference runs single-threaded on purpose: multithreading needs
 `SharedArrayBuffer`, which needs cross-origin isolation, which would break the

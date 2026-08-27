@@ -22,8 +22,13 @@ export function loadBackgroundRemoval(): Promise<BackgroundRemoval> {
 
 export function loadOrt(): Promise<Ort> {
   // The `/wasm` entry is the CPU-only build. The default entry pulls the JSEP
-  // (WebGPU) loader, which then fetches a second 26MB binary we would have to
+  // (WebGPU) loader, which then fetches a second large binary we would have to
   // host as well — for no gain, since inference here runs on the wasm provider.
+  //
+  // The version is pinned to 1.21.0 because @imgly/background-removal loads
+  // ORT's JS from node_modules but its wasm binary from its own CDN, and the
+  // two only agree on the exact peer version it declares. See
+  // types/onnxruntime-web.d.ts for why that version needs hand-written types.
   ortPromise ??= import('onnxruntime-web/wasm').then((ort) => {
     // Served from our own origin by scripts/copy-pdf-worker.mjs.
     ort.env.wasm.wasmPaths = '/ort/';

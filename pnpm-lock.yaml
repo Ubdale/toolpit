@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@imgly/background-removal':
         specifier: ^1.7.0
-        version: 1.7.0(onnxruntime-web@1.29.0)
+        version: 1.7.0(onnxruntime-web@1.21.0)
       '@tensorflow/tfjs':
         specifier: ^4.22.0
         version: 4.22.0(seedrandom@3.0.5)
@@ -24,8 +24,8 @@ importers:
         specifier: ^16.3.3
         version: 16.3.3(@types/node@26.3.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       onnxruntime-web:
-        specifier: ^1.29.0
-        version: 1.29.0
+        specifier: 1.21.0
+        version: 1.21.0
       pdf-lib:
         specifier: ^1.17.1
         version: 1.17.1
@@ -1141,11 +1141,11 @@ packages:
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
 
-  onnxruntime-common@1.29.0:
-    resolution: {integrity: sha512-/F63/e2VJoaVXGGNu6S5QH7jivBThGO95OzAVXXQ8hTta/b1QxI8udHa6cI3+3mAb5WWIIaMMwfZw01oivjJ1g==}
+  onnxruntime-common@1.21.0:
+    resolution: {integrity: sha512-Q632iLLrtCAVOTO65dh2+mNbQir/QNTVBG3h/QdZBpns7mZ0RYbLRBgGABPbpU9351AgYy7SJf1WaeVwMrBFPQ==}
 
-  onnxruntime-web@1.29.0:
-    resolution: {integrity: sha512-LuQlpX6MFLJZu756erwUeb1mNfoJGbs1kzDwJGNlf5RvfYMdqhcY3vNpDPK40CUV2HoWTkIj+uS0o36GFHjeYw==}
+  onnxruntime-web@1.21.0:
+    resolution: {integrity: sha512-adzOe+7uI7lKz6pQNbAsLMQd2Fq5Jhmoxd8LZjJr8m3KvbFyiYyRxRiC57/XXD+jb18voppjeGAjoZmskXG+7A==}
 
   pako@1.0.11:
     resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
@@ -1462,11 +1462,11 @@ snapshots:
   '@img/sharp-win32-x64@0.35.3':
     optional: true
 
-  '@imgly/background-removal@1.7.0(onnxruntime-web@1.29.0)':
+  '@imgly/background-removal@1.7.0(onnxruntime-web@1.21.0)':
     dependencies:
       lodash-es: 4.18.1
       ndarray: 1.0.19
-      onnxruntime-web: 1.29.0
+      onnxruntime-web: 1.21.0
       zod: 3.25.76
 
   '@jridgewell/gen-mapping@0.3.13':
@@ -2207,14 +2207,14 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  onnxruntime-common@1.29.0: {}
+  onnxruntime-common@1.21.0: {}
 
-  onnxruntime-web@1.29.0:
+  onnxruntime-web@1.21.0:
     dependencies:
       flatbuffers: 25.9.23
       guid-typescript: 1.0.9
       long: 5.3.2
-      onnxruntime-common: 1.29.0
+      onnxruntime-common: 1.21.0
       platform: 1.3.6
       protobufjs: 7.6.5
 

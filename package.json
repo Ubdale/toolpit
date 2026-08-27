@@ -17,7 +17,7 @@
     "@upscalerjs/esrgan-slim": "^1.0.0",
     "imagetracerjs": "^1.2.6",
     "next": "^16.3.3",
-    "onnxruntime-web": "^1.29.0",
+    "onnxruntime-web": "1.21.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.2.108",
     "react": "^19.2.8",
