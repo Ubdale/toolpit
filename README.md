@@ -49,13 +49,16 @@ app/                    one route per tool, each its own SEO landing page
 components/
   layout/               header, footer, theme toggle
   tool/                 ToolPage shell, privacy badge, related links, cards
-  tools/pdf/            the six working PDF tools (client components)
+  tools/pdf/  tools/svg/  tools/ai/  tools/record/   the tools themselves
   ui/                   dropzone, file list, progress, result panel, fields
 lib/
   tools.ts              THE registry — every tool's copy, metadata and links
   pdf/                  pdf-lib + pdf.js operations, lazily loaded
+  svg/                  svgo + image tracer, lazily loaded
+  ai/                   model loading, caching and MI-GAN inference
+  record/               capture, annotation compositing and trimming
   seo.ts  jsonld.ts     per-page metadata and structured data
-scripts/                pdf.js worker copy + icon generation
+scripts/                pdf.js worker + ONNX runtime copy, icon generation
 ```
 
 **[`lib/tools.ts`](lib/tools.ts) is the spine.** Navigation, the homepage grid,
@@ -75,51 +78,67 @@ inline script.
 ### Keeping the promise honest
 
 - No API routes, no server actions, no analytics.
-- File bytes live in React state and nowhere else — no IndexedDB, no cache.
-- The only thing written to the browser is the chosen theme.
-- Heavy libraries (`pdf-lib`, `pdfjs-dist`) are behind `import()` in
-  [`lib/pdf/runtime.ts`](lib/pdf/runtime.ts) so they never touch first load.
+- **A user's file bytes live in React state and nowhere else** — never written
+  to storage, never attached to a request.
+- Two things *are* written to the browser, and neither is user content: the
+  chosen theme, and downloaded model weights in a named Cache Storage bucket
+  (`toolpit-models-v1`) so a 28 MB download happens once rather than per visit.
+- The only outbound requests any tool makes are for its own model weights.
+  Everything else the tools touch is local.
+- Heavy libraries (`pdf-lib`, `pdfjs-dist`, `svgo`, the tracer, the AI runtimes)
+  sit behind `import()` in the `runtime.ts` of their `lib/` folder, so they never
+  touch first load.
 
 ## What is built
 
-**Phase 1 — PDF tools (done).** Merge, split, reorder/rotate, compress, images
-to PDF, PDF to images. Multi-file drag and drop, live page previews, progress
-for long jobs, ZIP bundling for multi-file output (store-only ZIP writer in
-[`lib/download.ts`](lib/download.ts) — no dependency).
+All thirteen tools are live.
 
-Phases 2–4 are **routed placeholders**: real URLs with full metadata, JSON-LD
-and genuine copy, already in the sitemap and nav, showing a "coming soon" state.
-
-## Next tool to build
-
-**The SVG optimizer** ([`/svg/optimize`](app/svg/optimize/page.tsx)) — it is the
-smallest remaining piece of real work and needs no model download:
-
-```bash
-pnpm add svgo
-```
-
-Run `optimize()` from a dynamic import, show a before/after byte count, and let
-the user paste SVG in as well as drop a file. Then the image tracer, which needs
-a tracing library:
-
-```bash
-pnpm add imagetracerjs      # or a WASM potrace build
-```
-
-### Libraries each remaining phase needs
-
-| Phase | Tools | Install |
+| Area | Tools | Engine |
 |---|---|---|
-| 2 | SVG optimizer | `pnpm add svgo` |
-| 2 | PNG/JPG → SVG tracer | `pnpm add imagetracerjs` (or a WASM potrace build) |
-| 2 | Favicon generator | none — canvas resizing plus the existing ZIP writer |
-| 3 | Background removal, upscaling, inpainting | `pnpm add onnxruntime-web`, plus quantized `.onnx` models served from `public/models/` and lazy-loaded when the tool opens |
-| 4 | Screen recorder | none — `getDisplayMedia` + `MediaRecorder` |
+| PDF | Merge, split, reorder/rotate, compress, images→PDF, PDF→images | `pdf-lib` + `pdfjs-dist` |
+| Vector | SVG optimizer, image→SVG tracer, favicon generator | `svgo`, `imagetracerjs`, canvas |
+| AI image | Background remover, upscaler, object removal | `@imgly/background-removal`, UpscalerJS/TF.js, MI-GAN via `onnxruntime-web` |
+| Capture | Screen recorder with live annotation and trim | `getDisplayMedia` + `MediaRecorder` |
 
-For Phase 3, load the model only after the visitor picks a file, cache it in the
-browser, and keep it out of the initial bundle — the same rule the PDF engines
-already follow.
+Multi-file output is bundled by a dependency-free store-only ZIP writer in
+[`lib/download.ts`](lib/download.ts).
+
+### How the AI models are delivered
+
+Weights are **fetched from a public CDN the first time a tool is opened**, then
+cached in the browser — the model travels to the visitor, the visitor's image
+never travels anywhere.
+
+| Tool | Weights | Source |
+|---|---|---|
+| Background remover | ~22–44 MB (ISNet) | `staticimgly.com`, the library's own CDN |
+| Upscaler | ~1 MB (ESRGAN-slim) | Bundled — small enough not to warrant a fetch |
+| Object removal | 28 MB (MI-GAN pipeline) | Hugging Face, cached via the Cache Storage API |
+
+The ONNX Runtime WebAssembly build is served from our own origin: the `/wasm`
+entry (CPU only) rather than the default, which would pull a second 26 MB JSEP
+binary for no gain. `scripts/copy-pdf-worker.mjs` copies it, and the pdf.js
+worker, into `public/` at build time — both are gitignored.
+
+Inference runs single-threaded on purpose: multithreading needs
+`SharedArrayBuffer`, which needs cross-origin isolation, which would break the
+cross-origin model fetches.
+
+## Next: what would actually differentiate this
+
+"No upload" is a feature, and a copyable one. The moat is the *structural*
+consequence of having no server — no size caps, no rate limits, no queue, and
+work that can be chained without the file ever moving. Three directions follow
+from that:
+
+1. **Chaining and recipes.** Drop a file once, stack operations on it, and save
+   the chain as a shareable URL — the recipe travels, the files never do. Apply
+   one recipe to a whole folder. A server product would have to bill for that.
+2. **Trust tools.** Redaction that destroys the underlying content instead of
+   drawing a black box over live text, and an EXIF/metadata inspector. These are
+   exactly the documents nobody uploads.
+3. **Creative output.** Click-tracking auto-zoom and GIF export on the recorder,
+   photo→poster vector art, zine and contact-sheet layouts.
 
 ## Copy
 

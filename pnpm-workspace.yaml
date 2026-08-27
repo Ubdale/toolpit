@@ -1,0 +1,13 @@
+# No dependency needs to run a postinstall script for Toolpit to build:
+# core-js only prints a funding notice, and protobufjs (pulled in by the
+# TensorFlow.js stack) regenerates types we never import from source. Declaring
+# an empty allowlist makes that an explicit decision, and turning off
+# strictDepBuilds stops the resulting notice from failing CI and Vercel.
+onlyBuiltDependencies: []
+ignoredBuiltDependencies:
+  - core-js
+  - protobufjs
+strictDepBuilds: false
+allowBuilds:
+  core-js: set this to true or false
+  protobufjs: set this to true or false

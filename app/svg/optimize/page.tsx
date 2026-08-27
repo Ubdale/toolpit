@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
-import { ComingSoon } from '@/components/tool/ComingSoon';
 import { ToolPage } from '@/components/tool/ToolPage';
+import SvgOptimizeTool from '@/components/tools/svg/SvgOptimizeTool';
 import { pageMetadata } from '@/lib/seo';
 import { getTool } from '@/lib/tools';
 
@@ -18,10 +18,7 @@ export const metadata: Metadata = pageMetadata({
 export default function Page() {
   return (
     <ToolPage href={HREF}>
-      <ComingSoon
-        href={HREF}
-        plan="This will run SVGO's plugin pipeline in the browser, with toggles for the choices that actually change output — precision, ID removal, style merging — and a byte-for-byte before/after comparison so you can see exactly what was stripped."
-      />
+      <SvgOptimizeTool />
     </ToolPage>
   );
 }

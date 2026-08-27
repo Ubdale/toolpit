@@ -172,7 +172,7 @@ export const tools: Tool[] = [
   {
     href: '/svg/image-to-svg',
     category: 'svg',
-    status: 'soon',
+    status: 'live',
     name: 'Image to SVG',
     summary: 'Trace a PNG or JPG into scalable vector paths.',
     title: 'Convert PNG & JPG to SVG Free — Image to Vector | Toolpit',
@@ -187,7 +187,7 @@ export const tools: Tool[] = [
   {
     href: '/svg/optimize',
     category: 'svg',
-    status: 'soon',
+    status: 'live',
     name: 'SVG optimizer',
     summary: 'Strip bloat and minify SVG files.',
     title: 'Optimize & Minify SVG Free Online | Toolpit',
@@ -202,7 +202,7 @@ export const tools: Tool[] = [
   {
     href: '/svg/favicon-generator',
     category: 'svg',
-    status: 'soon',
+    status: 'live',
     name: 'Favicon generator',
     summary: 'Every favicon size plus the HTML to paste in.',
     title: 'Free Favicon Generator — All Sizes, No Upload | Toolpit',
@@ -219,7 +219,7 @@ export const tools: Tool[] = [
   {
     href: '/image/remove-background',
     category: 'image',
-    status: 'soon',
+    status: 'live',
     name: 'Background remover',
     summary: 'Cut out a background with on-device AI.',
     title: 'Remove Image Background Free — No Upload | Toolpit',
@@ -244,7 +244,7 @@ export const tools: Tool[] = [
   {
     href: '/image/upscale',
     category: 'image',
-    status: 'soon',
+    status: 'live',
     name: 'Image upscaler',
     summary: 'Enlarge photos while keeping edges crisp.',
     title: 'AI Image Upscaler Free — Enlarge Photos, No Upload | Toolpit',
@@ -264,7 +264,7 @@ export const tools: Tool[] = [
   {
     href: '/image/remove-object',
     category: 'image',
-    status: 'soon',
+    status: 'live',
     name: 'Object removal',
     summary: 'Brush something out and let AI fill the gap.',
     title: 'Remove Objects from Photos Free — AI Inpaint | Toolpit',
@@ -281,7 +281,7 @@ export const tools: Tool[] = [
   {
     href: '/record/screen',
     category: 'record',
-    status: 'soon',
+    status: 'live',
     name: 'Screen recorder',
     summary: 'Record, trim and annotate your screen.',
     title: 'Free Screen Recorder — No Signup, No Watermark | Toolpit',

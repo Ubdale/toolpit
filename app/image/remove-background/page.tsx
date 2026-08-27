@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
-import { ComingSoon } from '@/components/tool/ComingSoon';
 import { ToolPage } from '@/components/tool/ToolPage';
+import BackgroundRemoverTool from '@/components/tools/ai/BackgroundRemoverTool';
 import { pageMetadata } from '@/lib/seo';
 import { getTool } from '@/lib/tools';
 
@@ -18,10 +18,7 @@ export const metadata: Metadata = pageMetadata({
 export default function Page() {
   return (
     <ToolPage href={HREF}>
-      <ComingSoon
-        href={HREF}
-        plan="A quantized segmentation model will download once, cache in your browser, and then run through onnxruntime-web on your own hardware. You will get a transparent PNG at full resolution, with a brush for touching up edges the model gets wrong."
-      />
+      <BackgroundRemoverTool />
     </ToolPage>
   );
 }

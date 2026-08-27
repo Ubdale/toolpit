@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
-import { ComingSoon } from '@/components/tool/ComingSoon';
 import { ToolPage } from '@/components/tool/ToolPage';
+import ImageToSvgTool from '@/components/tools/svg/ImageToSvgTool';
 import { pageMetadata } from '@/lib/seo';
 import { getTool } from '@/lib/tools';
 
@@ -18,10 +18,7 @@ export const metadata: Metadata = pageMetadata({
 export default function Page() {
   return (
     <ToolPage href={HREF}>
-      <ComingSoon
-        href={HREF}
-        plan="The tracer will run a Potrace-style algorithm compiled to WebAssembly, with controls for colour count, path smoothing and speckle removal, and a live side-by-side preview of the bitmap and the traced result before you download the SVG."
-      />
+      <ImageToSvgTool />
     </ToolPage>
   );
 }
