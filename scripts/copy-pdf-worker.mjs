@@ -1,7 +1,8 @@
 // Copies the runtime binaries that have to be served as static assets rather
-// than bundled: the pdf.js worker, and the ONNX Runtime WebAssembly build used
-// by the inpainting tool. Both are fetched on demand by the tool that needs
-// them, so neither touches any page's initial load.
+// than bundled: the pdf.js worker, the ONNX Runtime WebAssembly build used by
+// the inpainting tool, and the VTracer wasm used by the image tracer. Each is
+// fetched on demand by the tool that needs it, so none of them touch any page's
+// initial load.
 import { copyFile, mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -36,3 +37,13 @@ for (const asset of ['ort-wasm-simd-threaded.wasm', 'ort-wasm-simd-threaded.mjs'
     `ONNX Runtime ${path.extname(asset).slice(1)}`,
   );
 }
+
+// VTracer ships wasm-pack's "bundler" target, whose entry is a raw ESM `.wasm`
+// import. Rather than depend on the bundler supporting that, lib/vector/trace.ts
+// instantiates the module by hand against this copy.
+const vtracer = path.dirname(require.resolve('vtracer-webapp/vtracer_webapp_bg.js'));
+await copyInto(
+  path.join(vtracer, 'vtracer_webapp_bg.wasm'),
+  path.join(publicDir, 'vtracer', 'vtracer_webapp_bg.wasm'),
+  'VTracer wasm',
+);
