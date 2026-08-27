@@ -173,14 +173,14 @@ export const tools: Tool[] = [
     category: 'pdf',
     status: 'live',
     name: 'Excel to PDF',
-    summary: 'Turn a spreadsheet into a clean, paginated PDF.',
+    summary: 'Turn one or many spreadsheets into clean PDFs.',
     title: 'Convert Excel to PDF Free — XLSX & CSV, No Upload | Toolpit',
     description:
       'Convert XLSX, XLS, ODS or CSV spreadsheets into a PDF in your browser. Free, no signup, no watermark, and your data never leaves your device.',
     h1: 'Convert Excel to PDF',
     intro:
-      'Turn a spreadsheet into a PDF anyone can open, with columns that line up and headers repeated on every page. Pick the sheets you want, choose the page size, and download — all processed on your own machine, so financial and personal data never goes near a server.',
-    keywords: ['excel to pdf', 'xlsx to pdf', 'csv to pdf', 'spreadsheet to pdf'],
+      'Turn a spreadsheet into a PDF anyone can open, with columns that line up and headers repeated on every page. Drop in as many workbooks as you like, pick the sheets you want, and take away one combined PDF or a ZIP of one per file. There is no file limit, because there is no server to pay for one — every conversion happens on your own machine, so financial and personal data never goes near one.',
+    keywords: ['excel to pdf', 'xlsx to pdf', 'csv to pdf', 'bulk excel to pdf', 'batch convert spreadsheets'],
     related: ['/pdf/pdf-to-excel', '/pdf/merge', '/pdf/compress', '/pdf/images-to-pdf'],
   },
   {
@@ -188,14 +188,14 @@ export const tools: Tool[] = [
     category: 'pdf',
     status: 'live',
     name: 'PDF to Excel',
-    summary: 'Pull tables out of a PDF into a spreadsheet.',
+    summary: 'Pull tables out of one or many PDFs.',
     title: 'Convert PDF to Excel Free — Extract Tables, No Upload | Toolpit',
     description:
       'Extract tables from a PDF into an XLSX or CSV spreadsheet, right in your browser. Free, no signup, no watermark, and your document is never uploaded.',
     h1: 'Convert a PDF to Excel',
     intro:
-      'Get the numbers out of a PDF and back into a spreadsheet you can actually work with. Toolpit reads the text layer, rebuilds the rows and columns, and hands you an XLSX or CSV — entirely on your device, which matters when the document is an invoice, a statement or a payroll report.',
-    keywords: ['pdf to excel', 'pdf to xlsx', 'extract table from pdf', 'pdf to csv'],
+      'Get the numbers out of a PDF and back into a spreadsheet you can actually work with. Toolpit reads the text layer, rebuilds the rows and columns, and hands you an XLSX or CSV. Convert a whole folder at once into one combined workbook or a ZIP of one per document — entirely on your device, which matters when the files are invoices, statements or payroll reports.',
+    keywords: ['pdf to excel', 'pdf to xlsx', 'extract table from pdf', 'bulk pdf to excel', 'batch pdf table extraction'],
     related: ['/pdf/excel-to-pdf', '/pdf/to-images', '/pdf/split', '/pdf/merge'],
   },
 

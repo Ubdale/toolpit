@@ -79,8 +79,8 @@ export function RadioCards<T extends string>({
               key={option.value}
               className={cn(
                 'flex cursor-pointer gap-3 rounded-xl border px-3.5 py-3 transition-colors',
-                'has-[:focus-visible]:outline has-[:focus-visible]:outline-2',
-                'has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent',
+                'has-focus-visible:outline-2',
+                'has-focus-visible:outline-offset-2 has-focus-visible:outline-accent',
                 selected
                   ? 'border-accent bg-accent-soft'
                   : 'border-line bg-surface hover:border-line-strong',

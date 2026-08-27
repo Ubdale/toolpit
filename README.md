@@ -96,7 +96,7 @@ All fifteen tools are live.
 | Area | Tools | Engine |
 |---|---|---|
 | PDF | Merge, split, reorder/rotate, compress, images→PDF, PDF→images | `pdf-lib` + `pdfjs-dist` |
-| Spreadsheets | Excel→PDF, PDF→Excel (table reconstruction) | SheetJS + `pdf-lib` / `pdfjs-dist` |
+| Spreadsheets | Excel→PDF, PDF→Excel (table reconstruction), both in bulk | SheetJS + `pdf-lib` / `pdfjs-dist` |
 | Vector | SVG optimizer, image→vector tracer (SVG/PDF/AI/EPS), favicon generator | `svgo`, VTracer wasm, canvas |
 | AI image | Background remover (+ matte refinement and backdrops), upscaler (three model sizes), object removal (crop-to-mask, undo/redo) | `@imgly/background-removal`, UpscalerJS/TF.js, MI-GAN via `onnxruntime-web` |
 | Capture | Screen recorder with live annotation and trim | `getDisplayMedia` + `MediaRecorder` |
@@ -142,6 +142,11 @@ SVG, a true vector PDF, an Illustrator-compatible `.ai` (the same PDF bytes —
 Illustrator has opened PDF natively since v9), or EPS. Both writers speak only
 lines and cubics, so [`lib/vector/path.ts`](lib/vector/path.ts) normalises
 relative commands, shorthand curves, quadratics and elliptical arcs first.
+
+Both spreadsheet tools take **any number of files at once**, and either combine
+them into one output or return a ZIP of one per input. That is the shape the
+architecture wants: with no server, batch costs nothing to offer, so there is no
+file cap and no reason to invent one.
 
 **PDF → Excel** is inference, not extraction: a PDF stores glyphs at
 coordinates and has no concept of a table. Text is grouped into rows by
