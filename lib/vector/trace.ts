@@ -71,7 +71,7 @@ export type TraceSettings = {
   stacked: boolean;
   /** Discards regions smaller than this many pixels. */
   filterSpeckle: number;
-  /** Bits of colour kept per channel, 1-8. Higher means more distinct layers. */
+  /** Bits of colour kept per channel. See MAX_COLOR_PRECISION for the ceiling. */
   colorPrecision: number;
   /** Gradient step size — larger merges more shades into one layer. */
   layerDifference: number;
@@ -82,6 +82,15 @@ export type TraceSettings = {
   /** Decimal places kept in the output path data. */
   pathPrecision: number;
 };
+
+/**
+ * Highest colour precision this build tolerates.
+ *
+ * Measured, not guessed: 8 panics the wasm outright at every layer separation,
+ * and 7 "succeeds" while collapsing an entire photograph into a single path.
+ * 6 is both the last value that produces real output and VTracer's own default.
+ */
+export const MAX_COLOR_PRECISION = 6;
 
 export const defaultTraceSettings: TraceSettings = {
   mode: 'color',
@@ -104,8 +113,8 @@ export const TRACE_PRESETS: { id: string; label: string; note: string; settings:
       note: 'Many colour layers, smooth curves. Heavier output.',
       settings: {
         ...defaultTraceSettings,
-        colorPrecision: 8,
-        layerDifference: 8,
+        colorPrecision: MAX_COLOR_PRECISION,
+        layerDifference: 12,
         filterSpeckle: 4,
       },
     },
@@ -199,7 +208,9 @@ export async function traceImage(
       mode: settings.curve === 'pixel' ? 'none' : settings.curve,
       hierarchical: settings.stacked ? 'stacked' : 'cutout',
       filter_speckle: settings.filterSpeckle,
-      color_precision: settings.colorPrecision,
+      // Clamped here as well as in the UI: a value above this traps the wasm,
+      // and a trap is not something a slider should be able to cause.
+      color_precision: Math.max(1, Math.min(MAX_COLOR_PRECISION, settings.colorPrecision)),
       layer_difference: settings.layerDifference,
       corner_threshold: settings.cornerThreshold,
       length_threshold: settings.lengthThreshold,

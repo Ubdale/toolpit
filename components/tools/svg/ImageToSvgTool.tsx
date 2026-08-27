@@ -14,6 +14,7 @@ import { formatBytes, stripExtension } from '@/lib/format';
 import { byteLength } from '@/lib/svg/optimize';
 import { VECTOR_FORMATS, exportVector, parseSvg, type VectorFormat } from '@/lib/vector/export';
 import {
+  MAX_COLOR_PRECISION,
   TRACE_PRESETS,
   canvasFromFile,
   traceImage,
@@ -197,7 +198,7 @@ export default function ImageToSvgTool() {
                       id={id}
                       aria-describedby={describedBy}
                       min={1}
-                      max={8}
+                      max={MAX_COLOR_PRECISION}
                       step={1}
                       value={settings.colorPrecision}
                       onChange={(event) => update('colorPrecision', Number(event.target.value))}
