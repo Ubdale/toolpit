@@ -97,7 +97,7 @@ All thirteen tools are live.
 |---|---|---|
 | PDF | Merge, split, reorder/rotate, compress, images→PDF, PDF→images | `pdf-lib` + `pdfjs-dist` |
 | Vector | SVG optimizer, image→SVG tracer, favicon generator | `svgo`, `imagetracerjs`, canvas |
-| AI image | Background remover, upscaler, object removal | `@imgly/background-removal`, UpscalerJS/TF.js, MI-GAN via `onnxruntime-web` |
+| AI image | Background remover (+ matte refinement and backdrops), upscaler (three model sizes), object removal (crop-to-mask, undo/redo) | `@imgly/background-removal`, UpscalerJS/TF.js, MI-GAN via `onnxruntime-web` |
 | Capture | Screen recorder with live annotation and trim | `getDisplayMedia` + `MediaRecorder` |
 
 Multi-file output is bundled by a dependency-free store-only ZIP writer in
@@ -112,7 +112,7 @@ never travels anywhere.
 | Tool | Weights | Source |
 |---|---|---|
 | Background remover | 44 MB (ISNet quantized) or 88 MB (fp16) | `staticimgly.com`, the library's own CDN |
-| Upscaler | ~1 MB (ESRGAN-slim) | Bundled — small enough not to warrant a fetch |
+| Upscaler | ~1–5 MB (ESRGAN slim / medium / thick) | Bundled — small enough not to warrant a fetch |
 | Object removal | 28 MB (MI-GAN pipeline) | Hugging Face, cached via the Cache Storage API |
 
 The ONNX Runtime WebAssembly build is served from our own origin: the `/wasm`
@@ -132,6 +132,24 @@ hand-declares the small surface we use.
 Inference runs single-threaded on purpose: multithreading needs
 `SharedArrayBuffer`, which needs cross-origin isolation, which would break the
 cross-origin model fetches.
+
+### Why the AI tools are more than a model call
+
+A segmentation model returns an alpha channel, not a clean one: edge pixels come
+back semi-transparent while still carrying the colour of the background they
+were cut from, which is why a subject shot against something dark has a dark rim
+around the hair. [`lib/ai/matte.ts`](lib/ai/matte.ts) solves that back out by
+inverting the compositing equation — knowing alpha and estimating the old
+background, it recovers the true foreground colour. That plus edge shrink,
+feather and instant backdrop swapping all run on the finished cut-out in
+milliseconds, so they are live sliders rather than another model pass.
+
+Inpainting only sends the brushed region plus a margin of context to the model
+([`inpaintRegion`](lib/ai/inpaint.ts)). Erasing something small in a large photo
+is then a fraction of the work, and every pixel outside the crop stays
+bit-for-bit identical. Edit history is kept as PNG blobs rather than ImageData —
+a 12-megapixel frame is ~48 MB raw, so a few undo steps would otherwise cost
+half a gigabyte.
 
 ## Next: what would actually differentiate this
 

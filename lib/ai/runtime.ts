@@ -42,19 +42,43 @@ export function loadOrt(): Promise<Ort> {
   return ortPromise;
 }
 
+export type UpscaleFamily = 'slim' | 'medium' | 'thick';
+export type UpscaleFactor = 2 | 3 | 4;
+
+/**
+ * The three ESRGAN sizes, keyed by family and factor.
+ *
+ * Written out rather than built from a template string because bundlers can
+ * only code-split an `import()` whose specifier they can read statically — a
+ * computed path would drag every model into one chunk.
+ */
+const UPSCALE_MODELS: Record<UpscaleFamily, Record<UpscaleFactor, () => Promise<{ default: unknown }>>> = {
+  slim: {
+    2: () => import('@upscalerjs/esrgan-slim/2x'),
+    3: () => import('@upscalerjs/esrgan-slim/3x'),
+    4: () => import('@upscalerjs/esrgan-slim/4x'),
+  },
+  medium: {
+    2: () => import('@upscalerjs/esrgan-medium/2x'),
+    3: () => import('@upscalerjs/esrgan-medium/3x'),
+    4: () => import('@upscalerjs/esrgan-medium/4x'),
+  },
+  thick: {
+    2: () => import('@upscalerjs/esrgan-thick/2x'),
+    3: () => import('@upscalerjs/esrgan-thick/3x'),
+    4: () => import('@upscalerjs/esrgan-thick/4x'),
+  },
+};
+
 /** UpscalerJS needs a tfjs backend registered before a model can run. */
-export async function loadUpscaler(scale: 2 | 3 | 4) {
+export async function loadUpscaler(family: UpscaleFamily, scale: UpscaleFactor) {
   const [{ default: Upscaler }, model] = await Promise.all([
     import('upscaler'),
-    scale === 2
-      ? import('@upscalerjs/esrgan-slim/2x')
-      : scale === 3
-        ? import('@upscalerjs/esrgan-slim/3x')
-        : import('@upscalerjs/esrgan-slim/4x'),
+    UPSCALE_MODELS[family][scale](),
     import('@tensorflow/tfjs'),
   ]);
 
-  return new Upscaler({ model: model.default });
+  return new Upscaler({ model: model.default as never });
 }
 
 const MODEL_CACHE = 'toolpit-models-v1';

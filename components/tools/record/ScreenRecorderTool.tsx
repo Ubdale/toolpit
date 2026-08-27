@@ -285,7 +285,7 @@ export default function ScreenRecorderTool() {
                 type="checkbox"
                 checked={withMic}
                 onChange={(event) => setWithMic(event.target.checked)}
-                className="size-4 accent-[var(--tp-accent)]"
+                className="size-4 accent-accent"
               />
               Record my microphone as well
             </label>
@@ -336,7 +336,7 @@ export default function ScreenRecorderTool() {
                   step={1}
                   value={penWidth}
                   onChange={(event) => setPenWidth(Number(event.target.value))}
-                  className="w-24 accent-[var(--tp-accent)]"
+                  className="w-24 accent-accent"
                 />
               </label>
 
@@ -417,7 +417,7 @@ export default function ScreenRecorderTool() {
                     setRange((current) => ({ ...current, start }));
                     if (reviewRef.current) reviewRef.current.currentTime = start;
                   }}
-                  className="mt-1 w-full accent-[var(--tp-accent)]"
+                  className="mt-1 w-full accent-accent"
                 />
               </label>
               <label className="text-sm">
@@ -433,7 +433,7 @@ export default function ScreenRecorderTool() {
                     setRange((current) => ({ ...current, end }));
                     if (reviewRef.current) reviewRef.current.currentTime = end;
                   }}
-                  className="mt-1 w-full accent-[var(--tp-accent)]"
+                  className="mt-1 w-full accent-accent"
                 />
               </label>
             </div>

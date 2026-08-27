@@ -220,7 +220,7 @@ export default function PdfToImagesTool() {
                   type="checkbox"
                   checked={allPages}
                   onChange={(event) => setAllPages(event.target.checked)}
-                  className="size-4 accent-[var(--tp-accent)]"
+                  className="size-4 accent-accent"
                 />
                 Convert every page
               </label>

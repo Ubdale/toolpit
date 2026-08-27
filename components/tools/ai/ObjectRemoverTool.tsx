@@ -3,44 +3,48 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
+import { BeforeAfter } from '@/components/ui/BeforeAfter';
 import { Button } from '@/components/ui/Button';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { ErrorMessage } from '@/components/ui/Field';
 import { downloadBlob } from '@/lib/download';
 import { formatBytes, stripExtension } from '@/lib/format';
 import { canvasToBlob } from '@/lib/pdf/operations';
-import {
-  MAX_INFERENCE_EDGE,
-  MODEL_BYTES,
-  compositeRepair,
-  inpaint,
-  inpaintModelUrl,
-} from '@/lib/ai/inpaint';
+import { MODEL_BYTES, inpaintModelUrl, inpaintRegion } from '@/lib/ai/inpaint';
 import { isModelCached } from '@/lib/ai/runtime';
 
 import { ModelNotice, ModelProgress } from './ModelNotice';
 
 const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/avif'];
 
-type Loaded = {
-  file: File;
-  /** Current full-resolution pixels — replaced after each successful repair. */
-  image: ImageData;
-  url: string;
-};
+/**
+ * One step of edit history.
+ *
+ * PNG blobs rather than ImageData: a 12-megapixel frame is ~48 MB raw, so a
+ * handful of undo steps would be half a gigabyte. Compressed they are a couple
+ * of megabytes each and decode in milliseconds when actually needed.
+ */
+type Step = { blob: Blob; url: string };
+
+type Tool = 'brush' | 'eraser';
 
 export default function ObjectRemoverTool() {
-  const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  const [history, setHistory] = useState<Step[]>([]);
+  const [index, setIndex] = useState(-1);
+
+  const [tool, setTool] = useState<Tool>('brush');
   const [brush, setBrush] = useState(36);
   const [hasMask, setHasMask] = useState(false);
+
   const [stage, setStage] = useState<'download' | 'run' | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
+  const [lastRun, setLastRun] = useState<{ seconds: number; pixels: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cached, setCached] = useState<boolean | null>(null);
-  const [edits, setEdits] = useState(0);
 
   const maskCanvasRef = useRef<HTMLCanvasElement>(null);
-  const displayRef = useRef<HTMLImageElement>(null);
   const drawingRef = useRef(false);
   const urlsRef = useRef<string[]>([]);
 
@@ -59,6 +63,12 @@ export default function ObjectRemoverTool() {
     urlsRef.current.push(url);
     return url;
   }, []);
+
+  const current = index >= 0 ? history[index] : undefined;
+  const original = history[0];
+  const isBusy = stage !== null;
+  const canUndo = index > 0;
+  const canRedo = index >= 0 && index < history.length - 1;
 
   async function addFile(files: File[]) {
     const picked = files[0];
@@ -80,24 +90,48 @@ export default function ObjectRemoverTool() {
     context.drawImage(bitmap, 0, 0);
     bitmap.close();
 
+    const blob = await canvasToBlob(canvas, 'image/png');
     setError(null);
-    setEdits(0);
-    setLoaded({
-      file: picked,
-      image: context.getImageData(0, 0, canvas.width, canvas.height),
-      url: track(URL.createObjectURL(picked)),
-    });
+    setLastRun(null);
+    setFile(picked);
+    setSize({ width: canvas.width, height: canvas.height });
+    setHistory([{ blob, url: track(URL.createObjectURL(blob)) }]);
+    setIndex(0);
   }
 
-  // Size the mask overlay to the image every time the source changes.
+  // Size the mask overlay to the image whenever the image changes.
   useEffect(() => {
     const canvas = maskCanvasRef.current;
-    if (!canvas || !loaded) return;
-    canvas.width = loaded.image.width;
-    canvas.height = loaded.image.height;
+    if (!canvas || !size) return;
+    canvas.width = size.width;
+    canvas.height = size.height;
     canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
     setHasMask(false);
-  }, [loaded]);
+  }, [size, index]);
+
+  const undo = useCallback(() => {
+    setIndex((value) => Math.max(0, value - 1));
+  }, []);
+
+  const redo = useCallback(() => {
+    setHistory((steps) => {
+      setIndex((value) => Math.min(steps.length - 1, value + 1));
+      return steps;
+    });
+  }, []);
+
+  // Ctrl/Cmd+Z and Shift+Ctrl/Cmd+Z, the shortcuts anyone editing an image
+  // reaches for without thinking.
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z') return;
+      event.preventDefault();
+      if (event.shiftKey) redo();
+      else undo();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [undo, redo]);
 
   function pointFrom(event: React.PointerEvent<HTMLCanvasElement>) {
     const canvas = maskCanvasRef.current;
@@ -106,8 +140,8 @@ export default function ObjectRemoverTool() {
     return {
       x: ((event.clientX - rect.left) / rect.width) * canvas.width,
       y: ((event.clientY - rect.top) / rect.height) * canvas.height,
-      // Keep the brush the same visual size regardless of how far the image is
-      // scaled down to fit the page.
+      // Keep the brush a constant visual size however far the image is scaled
+      // down to fit the page.
       radius: (brush / 2) * (canvas.width / rect.width),
     };
   }
@@ -119,11 +153,21 @@ export default function ObjectRemoverTool() {
     const context = canvas.getContext('2d');
     if (!context) return;
 
+    context.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
     context.fillStyle = 'rgba(209, 84, 31, 0.55)';
     context.beginPath();
     context.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
     context.fill();
-    setHasMask(true);
+    context.globalCompositeOperation = 'source-over';
+    setHasMask(tool === 'brush' ? true : hasAnyMask(canvas));
+  }
+
+  function hasAnyMask(canvas: HTMLCanvasElement) {
+    const context = canvas.getContext('2d');
+    if (!context) return false;
+    const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+    for (let i = 3; i < data.length; i += 4) if (data[i]! > 127) return true;
+    return false;
   }
 
   function clearMask() {
@@ -133,18 +177,11 @@ export default function ObjectRemoverTool() {
     setHasMask(false);
   }
 
-  /** Alpha channel of the overlay → one byte per pixel, 255 = erase. */
   function readMask(width: number, height: number): Uint8Array | null {
     const canvas = maskCanvasRef.current;
     if (!canvas) return null;
-
-    const scaled = document.createElement('canvas');
-    scaled.width = width;
-    scaled.height = height;
-    const context = scaled.getContext('2d');
+    const context = canvas.getContext('2d');
     if (!context) return null;
-    context.drawImage(canvas, 0, 0, width, height);
-
     const { data } = context.getImageData(0, 0, width, height);
     const mask = new Uint8Array(width * height);
     for (let i = 0; i < mask.length; i += 1) mask[i] = data[i * 4 + 3]!;
@@ -152,61 +189,52 @@ export default function ObjectRemoverTool() {
   }
 
   async function run() {
-    if (!loaded || !hasMask) return;
+    if (!current || !size || !hasMask) return;
     setError(null);
     setStage(cached ? 'run' : 'download');
     setProgress(0);
+    const started = Date.now();
 
     try {
-      const { width, height } = loaded.image;
-      const scale = Math.min(1, MAX_INFERENCE_EDGE / Math.max(width, height));
-      const workWidth = Math.max(1, Math.round(width * scale));
-      const workHeight = Math.max(1, Math.round(height * scale));
+      const bitmap = await createImageBitmap(current.blob);
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      if (!context) throw new Error('This browser could not open a 2D canvas.');
+      context.drawImage(bitmap, 0, 0);
+      bitmap.close();
 
-      // Downscale the image for inference when it is large; the mask is scaled
-      // to match so the two stay aligned.
-      const workCanvas = document.createElement('canvas');
-      workCanvas.width = workWidth;
-      workCanvas.height = workHeight;
-      const workContext = workCanvas.getContext('2d');
-      if (!workContext) throw new Error('This browser could not open a 2D canvas.');
+      const image = context.getImageData(0, 0, canvas.width, canvas.height);
+      const mask = readMask(canvas.width, canvas.height);
+      if (!mask) throw new Error('Could not read the mask.');
 
-      const fullCanvas = document.createElement('canvas');
-      fullCanvas.width = width;
-      fullCanvas.height = height;
-      fullCanvas.getContext('2d')?.putImageData(loaded.image, 0, 0);
-      workContext.drawImage(fullCanvas, 0, 0, workWidth, workHeight);
-
-      const workMask = readMask(workWidth, workHeight);
-      const fullMask = readMask(width, height);
-      if (!workMask || !fullMask) throw new Error('Could not read the mask.');
-
-      const repaired = await inpaint(
-        {
-          image: workContext.getImageData(0, 0, workWidth, workHeight),
-          paintedMask: workMask,
-        },
-        (received, total) => {
-          setStage('download');
-          setProgress(total > 0 ? received / total : null);
-        },
-      );
+      const repaired = await inpaintRegion(image, mask, (received, total) => {
+        setStage('download');
+        setProgress(total > 0 ? received / total : null);
+      });
+      if (!repaired) throw new Error('Nothing was brushed.');
 
       setStage('run');
       setProgress(null);
       setCached(true);
 
-      const merged =
-        scale === 1 ? repaired : compositeRepair(loaded.image, repaired, fullMask);
+      const out = document.createElement('canvas');
+      out.width = repaired.image.width;
+      out.height = repaired.image.height;
+      out.getContext('2d')?.putImageData(repaired.image, 0, 0);
+      const blob = await canvasToBlob(out, 'image/png');
 
-      const outCanvas = document.createElement('canvas');
-      outCanvas.width = width;
-      outCanvas.height = height;
-      outCanvas.getContext('2d')?.putImageData(merged, 0, 0);
-      const blob = await canvasToBlob(outCanvas, 'image/png');
-
-      setLoaded({ file: loaded.file, image: merged, url: track(URL.createObjectURL(blob)) });
-      setEdits((count) => count + 1);
+      // A new edit truncates any redo branch, the way every editor behaves.
+      setHistory((steps) => [
+        ...steps.slice(0, index + 1),
+        { blob, url: track(URL.createObjectURL(blob)) },
+      ]);
+      setIndex((value) => value + 1);
+      setLastRun({
+        seconds: Math.max(1, Math.round((Date.now() - started) / 1000)),
+        pixels: repaired.inferencePixels,
+      });
       clearMask();
     } catch (cause) {
       setError(
@@ -218,30 +246,19 @@ export default function ObjectRemoverTool() {
     }
   }
 
-  async function download() {
-    if (!loaded) return;
-    const canvas = document.createElement('canvas');
-    canvas.width = loaded.image.width;
-    canvas.height = loaded.image.height;
-    canvas.getContext('2d')?.putImageData(loaded.image, 0, 0);
-    downloadBlob(
-      await canvasToBlob(canvas, 'image/png'),
-      `${stripExtension(loaded.file.name)}-cleaned.png`,
-    );
-  }
-
   function reset() {
-    setLoaded(null);
+    setFile(null);
+    setSize(null);
+    setHistory([]);
+    setIndex(-1);
     setError(null);
-    setEdits(0);
+    setLastRun(null);
   }
-
-  const isBusy = stage !== null;
 
   return (
     <div className="flex flex-col gap-6">
       <ToolSurface className="flex flex-col gap-6">
-        {!loaded ? (
+        {!current || !size ? (
           <Dropzone
             onFiles={addFile}
             accept={ACCEPTED.join(',')}
@@ -254,8 +271,11 @@ export default function ObjectRemoverTool() {
               <div className="min-w-0">
                 <ToolSectionHeading>Brush over what to remove</ToolSectionHeading>
                 <p className="text-sm text-muted">
-                  {loaded.image.width}×{loaded.image.height}
-                  {edits > 0 ? ` · ${edits} repair${edits === 1 ? '' : 's'} applied` : ''}
+                  {size.width}×{size.height}
+                  {index > 0 ? ` · ${index} repair${index === 1 ? '' : 's'}` : ''}
+                  {lastRun
+                    ? ` · last run ${lastRun.seconds}s on ${(lastRun.pixels / 1000).toFixed(0)}k pixels`
+                    : ''}
                 </p>
               </div>
               <Button variant="ghost" onClick={reset} disabled={isBusy}>
@@ -263,33 +283,56 @@ export default function ObjectRemoverTool() {
               </Button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-line bg-sunken p-3">
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-sunken p-3">
+              <div className="flex items-center gap-1">
+                {(['brush', 'eraser'] as Tool[]).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={tool === value}
+                    onClick={() => setTool(value)}
+                    className={`rounded-lg px-3 py-1.5 text-sm capitalize transition-colors ${
+                      tool === value
+                        ? 'bg-accent text-accent-contrast font-medium'
+                        : 'text-muted hover:bg-surface hover:text-text'
+                    }`}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+
               <label className="flex items-center gap-2 text-sm">
-                Brush
+                Size
                 <input
                   type="range"
                   min={8}
-                  max={120}
+                  max={160}
                   step={2}
                   value={brush}
                   onChange={(event) => setBrush(Number(event.target.value))}
-                  className="w-32 accent-[var(--tp-accent)]"
+                  className="w-28 accent-accent"
                 />
                 <span className="tabular-nums text-muted">{brush}px</span>
               </label>
+
               <Button size="sm" variant="secondary" onClick={clearMask} disabled={!hasMask}>
                 Clear mask
               </Button>
+
+              <span className="ml-auto flex items-center gap-1">
+                <Button size="sm" variant="ghost" onClick={undo} disabled={!canUndo || isBusy}>
+                  Undo
+                </Button>
+                <Button size="sm" variant="ghost" onClick={redo} disabled={!canRedo || isBusy}>
+                  Redo
+                </Button>
+              </span>
             </div>
 
             <div className="relative overflow-hidden rounded-xl border border-line bg-sunken">
               {/* eslint-disable-next-line @next/next/no-img-element -- object URL */}
-              <img
-                ref={displayRef}
-                src={loaded.url}
-                alt="Photo being repaired"
-                className="block w-full"
-              />
+              <img src={current.url} alt="Photo being repaired" className="block w-full" />
               <canvas
                 ref={maskCanvasRef}
                 onPointerDown={(event) => {
@@ -317,7 +360,7 @@ export default function ObjectRemoverTool() {
 
         <ErrorMessage>{error}</ErrorMessage>
 
-        {loaded ? (
+        {current ? (
           <>
             <ModelNotice bytes={MODEL_BYTES} cached={cached} label="MI-GAN inpainting model" />
 
@@ -327,22 +370,47 @@ export default function ObjectRemoverTool() {
               <Button size="lg" onClick={run} disabled={!hasMask || isBusy}>
                 {isBusy ? 'Working…' : 'Remove what I brushed'}
               </Button>
-              {edits > 0 ? (
-                <Button variant="secondary" onClick={download} disabled={isBusy}>
-                  Download PNG
+              {index > 0 ? (
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    downloadBlob(current.blob, `${stripExtension(file?.name ?? 'photo')}-cleaned.png`)
+                  }
+                  disabled={isBusy}
+                >
+                  Download PNG · {formatBytes(current.blob.size)}
                 </Button>
               ) : null}
             </div>
 
-            {edits > 0 ? (
-              <p className="text-sm text-muted">
-                Not quite right? Brush over what is left and run it again — each pass works on the
-                repaired image, so you can clean up in stages.
-              </p>
-            ) : null}
+            <p className="text-xs text-muted">
+              Only the brushed area plus a margin of surrounding context is sent to the model, so
+              erasing something small stays fast even in a large photo. Cover the whole object —
+              a mask that stops short leaves its edge as context, and the model will faithfully
+              paint more of it back.
+            </p>
           </>
         ) : null}
       </ToolSurface>
+
+      {original && current && index > 0 ? (
+        <section
+          aria-label="Result"
+          className="rounded-2xl border border-vault-line bg-vault-soft p-5 sm:p-6"
+        >
+          <p className="text-sm font-medium text-vault">
+            Done — and your file never left your device. Download it below.
+          </p>
+          <div className="mt-4">
+            <BeforeAfter
+              beforeSrc={original.url}
+              afterSrc={current.url}
+              beforeLabel="Original"
+              afterLabel="Repaired"
+            />
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

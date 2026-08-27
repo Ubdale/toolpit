@@ -92,7 +92,7 @@ export function RadioCards<T extends string>({
                 value={option.value}
                 checked={selected}
                 onChange={() => onChange(option.value)}
-                className="mt-0.5 size-4 shrink-0 accent-[var(--tp-accent)]"
+                className="mt-0.5 size-4 shrink-0 accent-accent"
               />
               <span>
                 <span className="block text-sm font-medium">{option.label}</span>
@@ -112,7 +112,7 @@ export function RangeInput({ className, ...props }: ComponentProps<'input'>) {
   return (
     <input
       type="range"
-      className={cn('w-full accent-[var(--tp-accent)]', className)}
+      className={cn('w-full accent-accent', className)}
       {...props}
     />
   );

@@ -250,7 +250,7 @@ function Toggle({
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="mt-0.5 size-4 shrink-0 accent-[var(--tp-accent)]"
+        className="mt-0.5 size-4 shrink-0 accent-accent"
       />
       <span>
         <span className="block text-sm font-medium">{label}</span>

@@ -95,61 +95,152 @@ export async function inpaint(
 }
 
 /**
- * Inference cost scales with pixel count, and a 12-megapixel phone photo would
- * exhaust the wasm heap. Large images are worked at a reduced size and the
- * repaired region is composited back into the full-resolution original.
+ * Ceiling on the longest edge handed to the model. Anything larger is worked at
+ * a reduced size and composited back at full resolution.
  */
 export const MAX_INFERENCE_EDGE = 1600;
 
-function makeCanvas(width: number, height: number): CanvasRenderingContext2D {
+export type MaskBounds = { x: number; y: number; width: number; height: number };
+
+/** Tight bounding box of the painted area, or null if nothing is painted. */
+export function maskBounds(
+  mask: Uint8Array,
+  width: number,
+  height: number,
+): MaskBounds | null {
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < height; y += 1) {
+    const row = y * width;
+    for (let x = 0; x < width; x += 1) {
+      if (mask[row + x]! <= 127) continue;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+
+  if (maxX < 0) return null;
+  return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+}
+
+function context2d(width: number, height: number): CanvasRenderingContext2D {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
-  const context = canvas.getContext('2d');
+  const context = canvas.getContext('2d', { willReadFrequently: true });
   if (!context) throw new Error('This browser could not open a 2D canvas.');
   return context;
 }
 
 /**
- * Pastes the repaired region back into the full-resolution original.
+ * Repairs only the region that was actually brushed.
  *
- * Only the painted area is replaced, so everything the visitor did not brush
- * over keeps its original pixels — a 4000px photo does not silently come back
- * as a 1600px one. The mask is blurred a little first so the seam between
- * repaired and untouched pixels is not a hard edge.
+ * Inference cost tracks the pixel count handed to the model, and MI-GAN only
+ * ever looks at the masked area plus its surroundings — so feeding it a whole
+ * 12-megapixel photo to erase a lamp post in one corner is almost entirely
+ * wasted work. Cropping to the mask's bounding box plus a margin of real
+ * context cuts a multi-second run to a fraction of it, and leaves every pixel
+ * outside the crop bit-for-bit untouched.
+ *
+ * The margin matters: the model needs to see enough of the surrounding scene to
+ * invent something plausible. Too tight a crop and it has nothing to go on.
  */
-export function compositeRepair(
+export async function inpaintRegion(
   original: ImageData,
-  repairedSmall: ImageData,
-  paintedMaskFull: Uint8Array,
-  feather = 2,
-): ImageData {
+  paintedMask: Uint8Array,
+  onProgress?: DownloadProgress,
+): Promise<{ image: ImageData; inferencePixels: number } | null> {
   const { width, height } = original;
+  const bounds = maskBounds(paintedMask, width, height);
+  if (!bounds) return null;
 
-  const repaired = makeCanvas(repairedSmall.width, repairedSmall.height);
-  repaired.putImageData(repairedSmall, 0, 0);
+  // Half the mask's longer side as context, never less than 64px.
+  const margin = Math.max(64, Math.round(Math.max(bounds.width, bounds.height) * 0.5));
+  const x0 = Math.max(0, bounds.x - margin);
+  const y0 = Math.max(0, bounds.y - margin);
+  const x1 = Math.min(width, bounds.x + bounds.width + margin);
+  const y1 = Math.min(height, bounds.y + bounds.height + margin);
+  const cropWidth = x1 - x0;
+  const cropHeight = y1 - y0;
 
-  const maskImage = new ImageData(width, height);
-  for (let i = 0; i < width * height; i += 1) {
+  const fullContext = context2d(width, height);
+  fullContext.putImageData(original, 0, 0);
+
+  const cropContext = context2d(cropWidth, cropHeight);
+  cropContext.drawImage(fullContext.canvas, x0, y0, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+  const cropMask = new Uint8Array(cropWidth * cropHeight);
+  for (let y = 0; y < cropHeight; y += 1) {
+    for (let x = 0; x < cropWidth; x += 1) {
+      cropMask[y * cropWidth + x] = paintedMask[(y + y0) * width + (x + x0)]!;
+    }
+  }
+
+  // Even a crop can exceed what wasm will happily allocate, so cap it too.
+  const scale = Math.min(1, MAX_INFERENCE_EDGE / Math.max(cropWidth, cropHeight));
+  const workWidth = Math.max(1, Math.round(cropWidth * scale));
+  const workHeight = Math.max(1, Math.round(cropHeight * scale));
+
+  let workImage: ImageData;
+  let workMask: Uint8Array;
+
+  if (scale === 1) {
+    workImage = cropContext.getImageData(0, 0, cropWidth, cropHeight);
+    workMask = cropMask;
+  } else {
+    const scaled = context2d(workWidth, workHeight);
+    scaled.drawImage(cropContext.canvas, 0, 0, workWidth, workHeight);
+    workImage = scaled.getImageData(0, 0, workWidth, workHeight);
+
+    const maskContext = context2d(cropWidth, cropHeight);
+    const maskImage = new ImageData(cropWidth, cropHeight);
+    for (let i = 0; i < cropMask.length; i += 1) {
+      maskImage.data[i * 4 + 3] = cropMask[i]!;
+    }
+    maskContext.putImageData(maskImage, 0, 0);
+
+    const scaledMask = context2d(workWidth, workHeight);
+    scaledMask.drawImage(maskContext.canvas, 0, 0, workWidth, workHeight);
+    const scaledData = scaledMask.getImageData(0, 0, workWidth, workHeight).data;
+    workMask = new Uint8Array(workWidth * workHeight);
+    for (let i = 0; i < workMask.length; i += 1) workMask[i] = scaledData[i * 4 + 3]!;
+  }
+
+  const repaired = await inpaint({ image: workImage, paintedMask: workMask }, onProgress);
+
+  // Paste the repaired crop back, masked and feathered, so the join is
+  // invisible and untouched pixels keep their exact original values.
+  const repairedContext = context2d(workWidth, workHeight);
+  repairedContext.putImageData(repaired, 0, 0);
+
+  const patch = context2d(cropWidth, cropHeight);
+  patch.imageSmoothingQuality = 'high';
+  patch.drawImage(repairedContext.canvas, 0, 0, cropWidth, cropHeight);
+
+  const maskLayer = context2d(cropWidth, cropHeight);
+  const maskImage = new ImageData(cropWidth, cropHeight);
+  for (let i = 0; i < cropMask.length; i += 1) {
     maskImage.data[i * 4] = 255;
     maskImage.data[i * 4 + 1] = 255;
     maskImage.data[i * 4 + 2] = 255;
-    maskImage.data[i * 4 + 3] = paintedMaskFull[i]!;
+    maskImage.data[i * 4 + 3] = cropMask[i]!;
   }
+  maskLayer.putImageData(maskImage, 0, 0);
 
-  const mask = makeCanvas(width, height);
-  mask.putImageData(maskImage, 0, 0);
-
-  const patch = makeCanvas(width, height);
-  patch.imageSmoothingQuality = 'high';
-  patch.drawImage(repaired.canvas, 0, 0, width, height);
   patch.globalCompositeOperation = 'destination-in';
-  patch.filter = `blur(${feather}px)`;
-  patch.drawImage(mask.canvas, 0, 0);
+  patch.filter = 'blur(2px)';
+  patch.drawImage(maskLayer.canvas, 0, 0);
 
-  const out = makeCanvas(width, height);
-  out.putImageData(original, 0, 0);
-  out.drawImage(patch.canvas, 0, 0);
+  fullContext.drawImage(patch.canvas, x0, y0);
 
-  return out.getImageData(0, 0, width, height);
+  return {
+    image: fullContext.getImageData(0, 0, width, height),
+    inferencePixels: workWidth * workHeight,
+  };
 }
+

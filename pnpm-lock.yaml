@@ -14,7 +14,13 @@ importers:
       '@tensorflow/tfjs':
         specifier: ^4.22.0
         version: 4.22.0(seedrandom@3.0.5)
+      '@upscalerjs/esrgan-medium':
+        specifier: ^1.0.0
+        version: 1.0.0(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))
       '@upscalerjs/esrgan-slim':
+        specifier: ^1.0.0
+        version: 1.0.0(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))
+      '@upscalerjs/esrgan-thick':
         specifier: ^1.0.0
         version: 1.0.0(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))
       imagetracerjs:
@@ -713,8 +719,18 @@ packages:
     peerDependencies:
       '@tensorflow/tfjs': ~4.11.0
 
+  '@upscalerjs/esrgan-medium@1.0.0':
+    resolution: {integrity: sha512-Z8JnR87sgetPABKevasXST3FdnXhaoTu9zpXnu3KLaHYpYStVt0FD1VZS9c6jhSGMBC0H929gN9RbWl+MeisKA==}
+    peerDependencies:
+      '@tensorflow/tfjs': ~4.11.0
+
   '@upscalerjs/esrgan-slim@1.0.0':
     resolution: {integrity: sha512-DXtwn5SE71+pZKluN/hGeLaZv6ZylyFQYSvMqU08kKCEA5Y9Q1cIIk4EvPTPZw8VqGi2C6F02c8OjhtId4BK2w==}
+    peerDependencies:
+      '@tensorflow/tfjs': ~4.11.0
+
+  '@upscalerjs/esrgan-thick@1.0.0':
+    resolution: {integrity: sha512-Xt7LAEa1WYVdU8teye1A2J3T2ylb3ihlU/x01x1ieM7zZh5FzTll6fwmeUC82mkztWloGZM65KdSEWOmhlXOdw==}
     peerDependencies:
       '@tensorflow/tfjs': ~4.11.0
 
@@ -1825,7 +1841,15 @@ snapshots:
     dependencies:
       '@tensorflow/tfjs': 4.22.0(seedrandom@3.0.5)
 
+  '@upscalerjs/esrgan-medium@1.0.0(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))':
+    dependencies:
+      '@tensorflow/tfjs': 4.22.0(seedrandom@3.0.5)
+
   '@upscalerjs/esrgan-slim@1.0.0(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))':
+    dependencies:
+      '@tensorflow/tfjs': 4.22.0(seedrandom@3.0.5)
+
+  '@upscalerjs/esrgan-thick@1.0.0(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))':
     dependencies:
       '@tensorflow/tfjs': 4.22.0(seedrandom@3.0.5)
 

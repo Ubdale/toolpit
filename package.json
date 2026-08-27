@@ -14,7 +14,9 @@
   "dependencies": {
     "@imgly/background-removal": "^1.7.0",
     "@tensorflow/tfjs": "^4.22.0",
+    "@upscalerjs/esrgan-medium": "^1.0.0",
     "@upscalerjs/esrgan-slim": "^1.0.0",
+    "@upscalerjs/esrgan-thick": "^1.0.0",
     "imagetracerjs": "^1.2.6",
     "next": "^16.3.3",
     "onnxruntime-web": "1.21.0",
