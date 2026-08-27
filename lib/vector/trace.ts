@@ -193,7 +193,10 @@ export async function traceImage(
     const params = JSON.stringify({
       canvas_id: canvasId,
       svg_id: svgId,
-      mode: settings.curve,
+      // VTracer names the no-simplification mode "none"; its match arm ends in
+      // `unreachable!()`, so any other spelling is a Rust panic rather than a
+      // rejected value.
+      mode: settings.curve === 'pixel' ? 'none' : settings.curve,
       hierarchical: settings.stacked ? 'stacked' : 'cutout',
       filter_speckle: settings.filterSpeckle,
       color_precision: settings.colorPrecision,
@@ -236,10 +239,39 @@ export async function traceImage(
       height: canvas.height,
       paths: (svg.match(/<path/g) ?? []).length,
     };
+  } catch (cause) {
+    // A Rust panic aborts: the module's allocator and wasm-bindgen's heap are
+    // left in an undefined state, so every later call would fail too. Drop the
+    // instance and let the next attempt build a clean one.
+    gluePromise = null;
+    throw new Error(describeTraceFailure(cause));
   } finally {
-    converter?.free();
+    try {
+      converter?.free();
+    } catch {
+      // Freeing a converter whose module already trapped throws again.
+    }
     host.remove();
   }
+}
+
+/** Turns a wasm trap into something a person can act on. */
+function describeTraceFailure(cause: unknown): string {
+  const message = cause instanceof Error ? cause.message : String(cause);
+
+  if (/unreachable|RuntimeError|memory access out of bounds/i.test(message)) {
+    return (
+      'The tracing engine stopped unexpectedly on this image. Try a smaller ' +
+      'colour count or a different preset — and if it keeps happening, the ' +
+      'black & white preset handles almost anything.'
+    );
+  }
+
+  if (/out of memory|Cannot enlarge/i.test(message)) {
+    return 'This image needs more memory than the tab has. Try a smaller image or fewer colours.';
+  }
+
+  return message || 'Could not trace this image.';
 }
 
 /**

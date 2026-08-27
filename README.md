@@ -102,7 +102,7 @@ All fifteen tools are live.
 | Area | Tools | Engine |
 |---|---|---|
 | PDF | Merge, split, reorder/rotate, compress, images→PDF, PDF→images | `pdf-lib` + `pdfjs-dist` |
-| Spreadsheets | Excel→PDF, PDF→Excel (table reconstruction), both in bulk | SheetJS + `pdf-lib` / `pdfjs-dist` |
+| Spreadsheets | Excel→PDF and PDF→Excel, style-preserving, both in bulk | ExcelJS + SheetJS + `pdf-lib` / `pdfjs-dist` |
 | Vector | SVG optimizer, image→vector tracer (SVG/PDF/AI/EPS), favicon generator | `svgo`, VTracer wasm, canvas |
 | AI image | Background remover (+ matte refinement and backdrops), upscaler (three model sizes), object removal (crop-to-mask, undo/redo) | `@imgly/background-removal`, UpscalerJS/TF.js, MI-GAN via `onnxruntime-web` |
 | Capture | Screen recorder with live annotation and trim | `getDisplayMedia` + `MediaRecorder` |
@@ -153,6 +153,14 @@ Both spreadsheet tools take **any number of files at once**, and either combine
 them into one output or return a ZIP of one per input. That is the shape the
 architecture wants: with no server, batch costs nothing to offer, so there is no
 file cap and no reason to invent one.
+
+**Excel → PDF keeps formatting**, which needs two libraries. SheetJS's community
+build deliberately does not parse cell styles — they are a paid feature — so
+`.xlsx` is read with ExcelJS (fonts, fills, colours, alignment, merges, column
+widths, hidden rows). ExcelJS in turn cannot apply number formats, so displayed
+values go through SheetJS's SSF formatter. `.xls` and `.ods` only SheetJS can
+open, and convert as plain tables — which the UI states rather than leaving the
+visitor to wonder.
 
 **PDF → Excel** is inference, not extraction: a PDF stores glyphs at
 coordinates and has no concept of a table. Text is grouped into rows by

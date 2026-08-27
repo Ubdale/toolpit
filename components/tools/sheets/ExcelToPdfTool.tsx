@@ -10,14 +10,15 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { createZip, downloadBlob, type ZipEntry } from '@/lib/download';
 import { formatBytes, stripExtension } from '@/lib/format';
 import { toPdfBlob } from '@/lib/pdf/operations';
-import { SPREADSHEET_TYPES, readWorkbook, type SheetTable } from '@/lib/sheets/runtime';
+import { SPREADSHEET_TYPES } from '@/lib/sheets/runtime';
+import { readAnyWorkbook, type StyledTable } from '@/lib/sheets/styled';
 import { defaultSheetPdfOptions, tablesToPdf, type SheetPdfOptions } from '@/lib/sheets/toPdf';
 
 type Loaded = {
   id: string;
   name: string;
   size: number;
-  tables: SheetTable[];
+  tables: StyledTable[];
 };
 
 type Output = 'combined' | 'separate';
@@ -37,9 +38,11 @@ export default function ExcelToPdfTool() {
   const [result, setResult] = useState<{ blob: Blob; filename: string; detail: string } | null>(
     null,
   );
-  const [notes, setNotes] = useState<{ substitutions: number; bandedSheets: string[] } | null>(
-    null,
-  );
+  const [notes, setNotes] = useState<{
+    substitutions: number;
+    bandedSheets: string[];
+    styledSheets: string[];
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isReading, setIsReading] = useState(false);
 
@@ -56,7 +59,7 @@ export default function ExcelToPdfTool() {
 
     for (const file of incoming) {
       try {
-        const tables = await readWorkbook(file);
+        const tables = await readAnyWorkbook(file);
         if (tables.length === 0) throw new Error('no readable rows');
         loaded.push({
           id: `sheet-${(counter += 1)}`,
@@ -109,7 +112,7 @@ export default function ExcelToPdfTool() {
     setResult(null);
   }
 
-  function chosenTables(entry: Loaded, prefix: boolean): SheetTable[] {
+  function chosenTables(entry: Loaded, prefix: boolean): StyledTable[] {
     return entry.tables
       .filter((table) => selected.has(keyFor(entry.id, table.name)))
       .map((table) => ({
@@ -128,6 +131,7 @@ export default function ExcelToPdfTool() {
 
     let substitutions = 0;
     const bandedSheets: string[] = [];
+    const styledSheets: string[] = [];
 
     try {
       if (output === 'combined') {
@@ -140,6 +144,7 @@ export default function ExcelToPdfTool() {
         );
         substitutions = built.substitutions;
         bandedSheets.push(...built.bandedSheets);
+        styledSheets.push(...built.styledSheets);
 
         const blob = toPdfBlob(built.bytes);
         const filename =
@@ -161,6 +166,7 @@ export default function ExcelToPdfTool() {
           const built = await tablesToPdf(tables, options);
           substitutions += built.substitutions;
           bandedSheets.push(...built.bandedSheets);
+          styledSheets.push(...built.styledSheets);
           entries.push({
             name: `${stripExtension(entry.name)}.pdf`,
             data: new Uint8Array(built.bytes),
@@ -188,7 +194,11 @@ export default function ExcelToPdfTool() {
         }
       }
 
-      setNotes({ substitutions, bandedSheets: [...new Set(bandedSheets)] });
+      setNotes({
+        substitutions,
+        bandedSheets: [...new Set(bandedSheets)],
+        styledSheets: [...new Set(styledSheets)],
+      });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not build the PDF.');
     } finally {
@@ -229,8 +239,18 @@ export default function ExcelToPdfTool() {
           </div>
         </div>
 
-        {notes && (notes.substitutions > 0 || notes.bandedSheets.length > 0) ? (
+        {notes &&
+        (notes.substitutions > 0 ||
+          notes.bandedSheets.length > 0 ||
+          notes.styledSheets.length > 0) ? (
           <div className="mt-5 flex flex-col gap-2 text-sm text-muted">
+            {notes.styledSheets.length > 0 ? (
+              <p>
+                Formatting was carried across on {notes.styledSheets.join(', ')} — fonts,
+                colours, fills, alignment, merged cells and your own column widths. Charts,
+                images and conditional formatting rules cannot be reproduced.
+              </p>
+            ) : null}
             {notes.bandedSheets.length > 0 ? (
               <p>
                 {notes.bandedSheets.join(', ')} {notes.bandedSheets.length === 1 ? 'was' : 'were'}{' '}
@@ -379,7 +399,13 @@ export default function ExcelToPdfTool() {
             ]}
           />
 
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <Toggle
+              label="Keep formatting"
+              hint="Fonts, colours, fills, alignment and merges from .xlsx files."
+              checked={options.keepStyling}
+              onChange={(value) => setOptions((c) => ({ ...c, keepStyling: value }))}
+            />
             <Toggle
               label="Repeat header row"
               hint="Puts row 1 at the top of every page."
@@ -401,11 +427,13 @@ export default function ExcelToPdfTool() {
           </div>
 
           <p className="rounded-xl border border-line bg-sunken px-3.5 py-3 text-xs text-muted">
-            This produces a readable report of your data — cell values, aligned columns, repeated
-            headers. It does not recreate fonts, colours, merged cells or charts, because a
-            spreadsheet&rsquo;s appearance cannot be rebuilt from its values alone. Sheets too wide
-            for one page are split across column bands rather than cropped or crushed, and
-            characters the PDF font cannot encode are approximated.
+            From an <strong className="text-text">.xlsx</strong> this keeps your fonts, text and
+            fill colours, bold and italic, alignment, merged cells and column widths. Charts,
+            images and conditional formatting rules cannot be reproduced, and{' '}
+            <strong className="text-text">.xls</strong>, <strong className="text-text">.ods</strong>{' '}
+            and <strong className="text-text">.csv</strong> carry no readable formatting at all, so
+            those convert as plain tables. Sheets too wide for one page are split across column
+            bands rather than cropped, and characters the PDF font cannot encode are approximated.
           </p>
 
           {isBusy ? <ProgressBar value={progress} label={progressLabel} /> : null}

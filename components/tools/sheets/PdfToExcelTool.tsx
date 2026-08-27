@@ -12,7 +12,12 @@ import { createZip, downloadBlob, type ZipEntry } from '@/lib/download';
 import { formatBytes, stripExtension } from '@/lib/format';
 import { usePdfFiles } from '@/components/tools/pdf/usePdfFiles';
 import { defaultExtractOptions, pdfToTables, type ExtractOptions } from '@/lib/sheets/fromPdf';
-import { writeCsv, writeWorkbook, type SheetTable } from '@/lib/sheets/runtime';
+import { writeCsv, type SheetTable } from '@/lib/sheets/runtime';
+import {
+  defaultExcelStyleOptions,
+  writeStyledWorkbook,
+  type ExcelStyleOptions,
+} from '@/lib/sheets/toExcel';
 
 type Output = 'combined' | 'separate';
 
@@ -20,6 +25,7 @@ export default function PdfToExcelTool() {
   const { files, error, setError, isReading, add, remove, move, clear } = usePdfFiles(true);
   const [options, setOptions] = useState<ExtractOptions>(defaultExtractOptions);
   const [output, setOutput] = useState<Output>('separate');
+  const [style, setStyle] = useState<ExcelStyleOptions>(defaultExcelStyleOptions);
   const [progress, setProgress] = useState<number | null>(null);
   const [progressLabel, setProgressLabel] = useState('Reading the pages…');
   const [preview, setPreview] = useState<SheetTable | null>(null);
@@ -64,7 +70,7 @@ export default function PdfToExcelTool() {
 
         if (all.length === 0) throw new Error(noTextMessage(files.length));
 
-        const blob = await writeWorkbook(all);
+        const blob = await writeStyledWorkbook(all, style);
         const filename =
           files.length === 1 ? `${stripExtension(files[0]!.name)}.xlsx` : 'extracted.xlsx';
         setResult({
@@ -86,7 +92,7 @@ export default function PdfToExcelTool() {
           }
           if (extracted.tables.length > 0) {
             firstOfAll ??= extracted.tables[0]!;
-            const workbook = await writeWorkbook(extracted.tables);
+            const workbook = await writeStyledWorkbook(extracted.tables, style);
             entries.push({
               name: `${stripExtension(file.name)}.xlsx`,
               data: new Uint8Array(await workbook.arrayBuffer()),
@@ -215,6 +221,41 @@ export default function PdfToExcelTool() {
               ]}
             />
 
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-3 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent">
+                <input
+                  type="checkbox"
+                  checked={style.typeNumbers}
+                  onChange={(event) =>
+                    setStyle((c) => ({ ...c, typeNumbers: event.target.checked }))
+                  }
+                  className="mt-0.5 size-4 shrink-0 accent-accent"
+                />
+                <span>
+                  <span className="block text-sm font-medium">Numbers as numbers</span>
+                  <span className="mt-0.5 block text-xs text-muted">
+                    Keeps them looking identical, but lets you actually sum the column.
+                  </span>
+                </span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-3 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent">
+                <input
+                  type="checkbox"
+                  checked={style.markHeader}
+                  onChange={(event) =>
+                    setStyle((c) => ({ ...c, markHeader: event.target.checked }))
+                  }
+                  className="mt-0.5 size-4 shrink-0 accent-accent"
+                />
+                <span>
+                  <span className="block text-sm font-medium">Mark the header row</span>
+                  <span className="mt-0.5 block text-xs text-muted">
+                    Bolds and freezes row 1 so it stays visible while scrolling.
+                  </span>
+                </span>
+              </label>
+            </div>
+
             <Field
               label={`Column sensitivity: ${options.columnGap}pt`}
               hint="How wide a gap starts a new column. Lower splits more aggressively; raise it if single values are being cut in half."
@@ -238,7 +279,9 @@ export default function PdfToExcelTool() {
               A PDF has no idea what a table is — it stores glyphs at coordinates. Toolpit infers
               the grid by grouping text into rows and clustering columns by their left edges. That
               works well on machine-generated documents and less well on heavily designed layouts,
-              so check the preview before trusting the numbers.
+              so check the preview before trusting the numbers. Values arrive exactly as they were
+              displayed — a figure shown as 1,200.00 still reads 1,200.00 — but typed as real
+              numbers underneath, and columns are sized to their contents.
             </p>
 
             {isBusy ? <ProgressBar value={progress} label={progressLabel} /> : null}
