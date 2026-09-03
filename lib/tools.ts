@@ -575,6 +575,48 @@ export const tools: Tool[] = [
     related: ['/create/resume', '/create/qr-code', '/pdf/pdf-to-excel', '/svg/optimize'],
   },
   {
+    href: '/create/chart-builder',
+    category: 'create',
+    status: 'live',
+    name: 'Chart builder',
+    summary: 'Map a spreadsheet to any of 30 chart types.',
+    title: 'Free Chart Builder — 30 Chart Types from a CSV | Toolpit',
+    description:
+      'Drop a CSV or Excel file, map fields to axes and series, and build any of thirty chart types with live preview. Free, no signup, nothing uploaded.',
+    h1: 'Build a chart from your data',
+    intro:
+      'Drop in a spreadsheet and compose a chart from it: pick the category axis, add measures with real aggregations — sum, average, median, distinct count — filter and rank the rows, then choose from thirty chart types and watch the preview redraw as you go. Filters, sorting and saved templates use the same vocabulary as the report builder, so the two work as one system. Your file is read in this tab and never uploaded.',
+    keywords: [
+      'chart builder',
+      'csv to chart',
+      'excel chart maker',
+      'pivot chart online',
+      'data visualisation tool',
+    ],
+    related: ['/create/chart', '/create/report-builder', '/pdf/pdf-to-excel', '/create/qr-code'],
+  },
+  {
+    href: '/create/report-builder',
+    category: 'create',
+    status: 'live',
+    name: 'Report builder',
+    summary: 'Pivot, group and format a spreadsheet, then export Excel.',
+    title: 'Free Report Builder — Pivot & Export to Excel | Toolpit',
+    description:
+      'Build a pivoted, grouped, conditionally formatted report from a CSV or Excel file and export it as a formatted .xlsx. Free, no signup, nothing uploaded.',
+    h1: 'Build a report from your data',
+    intro:
+      'Drop in a spreadsheet and shape it the way you would in Excel: pick and order columns, pivot one field into columns, group rows with subtotals and a grand total, filter with nested AND/OR conditions, and add data bars, colour scales and highlight rules. The export is a real .xlsx with the formatting intact and the numbers still numbers, so the totals recalculate — not a picture of a table. Everything happens in this tab.',
+    keywords: [
+      'report builder',
+      'pivot table online',
+      'csv to excel report',
+      'conditional formatting online',
+      'export xlsx from csv',
+    ],
+    related: ['/create/chart-builder', '/pdf/pdf-to-excel', '/pdf/excel-to-pdf', '/create/chart'],
+  },
+  {
     href: '/create/qr-code',
     category: 'create',
     status: 'live',

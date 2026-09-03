@@ -653,6 +653,58 @@ export const guides: Record<string, ToolGuide> = {
     ],
   },
 
+  '/create/chart-builder': {
+    steps: [
+      'Drop in a CSV or Excel file — an example dataset is loaded to start with.',
+      'Pick the category axis and add measures with the aggregation you want.',
+      'Choose a chart type and watch the preview redraw as you adjust it.',
+    ],
+    faqs: [
+      { question: 'Is my data uploaded?', answer: PRIVACY_ANSWER },
+      {
+        question: 'How is this different from the chart maker?',
+        answer:
+          'The chart maker takes a small table you have already shaped and draws it. The builder takes a whole spreadsheet and shapes it for you: it aggregates, filters, ranks and splits into series, and offers thirty chart types rather than seven. Use the maker for a quick chart of numbers you already have; use the builder when the file is the raw data.',
+      },
+      {
+        question: 'Do my saved charts sync between devices?',
+        answer:
+          'No. Templates are kept in this browser on this device, because there is no account and no server to sync them through. Clearing your site data clears them, so treat the exported image or file as the real artefact.',
+      },
+      {
+        question: 'What happens with a very large file?',
+        answer:
+          'The preview works on the first few thousand rows so it stays instant, and says so underneath the chart when it is doing that. The aggregation itself runs over what is loaded — for a file large enough to matter, filter it down first.',
+      },
+    ],
+  },
+
+  '/create/report-builder': {
+    steps: [
+      'Drop in a CSV or Excel file.',
+      'Choose columns, grouping or a pivot, and add formatting rules.',
+      'Export a formatted .xlsx, a CSV, or print it.',
+    ],
+    faqs: [
+      { question: 'Is my data uploaded?', answer: PRIVACY_ANSWER },
+      {
+        question: 'Does the Excel export keep the formatting?',
+        answer:
+          'Yes — header styling, number formats, currency and percent codes, alignment, indentation, subtotal and grand-total borders, frozen panes and column widths all come across. Crucially the numbers are written as numbers with a format code rather than as pre-formatted text, so Excel can still sum them. An export that looks right but cannot be recalculated is not a spreadsheet.',
+      },
+      {
+        question: 'Can it pivot like Excel?',
+        answer:
+          'It does the common case: one field down the side, one field across the top, and one aggregated measure in the middle, with a total column and a grand-total row. Multi-level nested pivots with several measures at once are beyond what this does.',
+      },
+      {
+        question: 'Does it share anything with the chart builder?',
+        answer:
+          'The filters, sorting, aggregations, top-N and saved-template mechanism are the same types running through the same engine, so a condition means the same thing in both and the two read as one system.',
+      },
+    ],
+  },
+
   '/create/qr-code': {
     steps: [
       'Choose what the code should do — a link, Wi-Fi, a contact card or plain text.',

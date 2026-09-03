@@ -2,7 +2,7 @@
 
 import { Combobox, Select, createListCollection, Portal } from '@ark-ui/react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useMemo, useRef, type ReactNode } from 'react';
+import { useId, useMemo, useRef, type ReactNode } from 'react';
 
 import { cn } from '@/lib/cn';
 
@@ -196,6 +196,7 @@ function FieldShell({
   invalid,
   children,
   className,
+  controlId,
 }: {
   label?: string;
   hint?: string;
@@ -203,10 +204,18 @@ function FieldShell({
   invalid?: boolean;
   children: ReactNode;
   className?: string;
+  /** The id of the control the label names. */
+  controlId: string;
 }) {
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
-      {label ? <span className="text-sm font-medium">{label}</span> : null}
+      {/* A real label, associated with the control — clicking it focuses the
+          dropdown, and a screen reader announces the two together. */}
+      {label ? (
+        <label htmlFor={controlId} className="w-fit text-sm font-medium">
+          {label}
+        </label>
+      ) : null}
       {children}
       {error ? (
         <p role="alert" className="text-xs text-danger">
@@ -302,6 +311,8 @@ function Status({ loading, empty }: { loading?: boolean; empty: string }) {
 // ------------------------------------------------------------------- select
 
 function SelectDropdown<T extends string>(props: DropdownProps<T>) {
+  const generatedId = useId();
+  const controlId = props.id ?? generatedId;
   const collection = useCollection(props.options);
   const rows = useGrouped(props.options);
   const hasDescriptions = props.options.some((option) => option.description);
@@ -316,6 +327,7 @@ function SelectDropdown<T extends string>(props: DropdownProps<T>) {
       error={props.error}
       invalid={props.invalid}
       className={props.className}
+      controlId={controlId}
     >
       <Select.Root
         collection={collection}
@@ -332,7 +344,7 @@ function SelectDropdown<T extends string>(props: DropdownProps<T>) {
       >
         <Select.Control>
           <Select.Trigger
-            id={props.id}
+            id={controlId}
             className={cn(controlClasses, controlTone(props.invalid || Boolean(props.error)))}
           >
             <span className="min-w-0 flex-1 truncate py-2">
@@ -440,6 +452,8 @@ function TriggerValue({
 // ----------------------------------------------------------------- combobox
 
 function ComboboxDropdown<T extends string>(props: DropdownProps<T>) {
+  const generatedId = useId();
+  const controlId = props.id ?? generatedId;
   const collection = useCollection(props.options);
   const rows = useGrouped(props.options);
   const hasDescriptions = props.options.some((option) => option.description);
@@ -454,6 +468,7 @@ function ComboboxDropdown<T extends string>(props: DropdownProps<T>) {
       error={props.error}
       invalid={props.invalid}
       className={props.className}
+      controlId={controlId}
     >
       <Combobox.Root
         collection={collection}
@@ -495,7 +510,7 @@ function ComboboxDropdown<T extends string>(props: DropdownProps<T>) {
           ) : null}
 
           <Combobox.Input
-            id={props.id}
+            id={controlId}
             name={props.name}
             placeholder={props.placeholder ?? 'Search…'}
             className="min-w-0 flex-1 bg-transparent py-2 outline-none placeholder:text-muted"
