@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { extractPages, renderThumbnails } from '@/lib/pdf/operations';
+import { Icon, type IconName } from '@/components/ui/Icon';
 
 /**
  * A live preview that runs the real pipeline.
@@ -72,21 +73,19 @@ export function StampPreview({
           <div className="flex items-center gap-1">
             <PagerButton
               label="Previous page"
+              icon="chevronLeft"
               disabled={pageIndex === 0}
               onClick={() => onPageChange(pageIndex - 1)}
-            >
-              <path d="m14 6-6 6 6 6" />
-            </PagerButton>
+            />
             <span className="min-w-20 text-center text-xs text-muted tabular-nums">
               Page {pageIndex + 1} of {pageCount}
             </span>
             <PagerButton
               label="Next page"
+              icon="chevronRight"
               disabled={pageIndex >= pageCount - 1}
               onClick={() => onPageChange(pageIndex + 1)}
-            >
-              <path d="m10 6 6 6-6 6" />
-            </PagerButton>
+            />
           </div>
         ) : null}
       </div>
@@ -117,14 +116,14 @@ export function StampPreview({
 
 function PagerButton({
   label,
+  icon,
   onClick,
   disabled,
-  children,
 }: {
   label: string;
+  icon: IconName;
   onClick: () => void;
   disabled: boolean;
-  children: React.ReactNode;
 }) {
   return (
     <button
@@ -135,18 +134,7 @@ function PagerButton({
       onClick={onClick}
       className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-text disabled:pointer-events-none disabled:opacity-30"
     >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-        className="size-4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {children}
-      </svg>
+      <Icon name={icon} size={18} />
     </button>
   );
 }

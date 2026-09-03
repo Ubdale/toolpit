@@ -1,4 +1,5 @@
 import type { ToolGuide } from '@/lib/tool-guides';
+import { Icon } from '@/components/ui/Icon';
 
 /**
  * The steps and questions under every tool.
@@ -44,12 +45,11 @@ export function ToolGuideSections({ guide, heading }: { guide: ToolGuide; headin
               <summary className="cursor-pointer list-none font-medium marker:content-none">
                 <span className="flex items-start justify-between gap-4">
                   <span>{faq.question}</span>
-                  <span
-                    aria-hidden="true"
-                    className="mt-1 shrink-0 text-muted transition-transform group-open:rotate-180"
-                  >
-                    ▾
-                  </span>
+                  <Icon
+                    name="chevronDown"
+                    size={18}
+                    className="mt-0.5 shrink-0 text-muted transition-transform group-open:rotate-180"
+                  />
                 </span>
               </summary>
               <p className="mt-3 text-muted">{faq.answer}</p>

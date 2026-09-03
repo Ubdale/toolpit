@@ -19,6 +19,7 @@ import {
 } from '@/lib/resume/types';
 
 import { ResumePreview } from './ResumePreview';
+import { Icon, type IconName } from '@/components/ui/Icon';
 
 const STORAGE_KEY = 'toolpit.resume.v1';
 
@@ -749,17 +750,14 @@ function EntryCard({
       <div className="flex items-center justify-between gap-2">
         <p className="truncate text-sm font-medium">{title}</p>
         <div className="flex shrink-0 items-center gap-1">
-          <SmallButton label="Move up" disabled={!canMoveUp} onClick={() => onMove(-1)}>
-            ↑
-          </SmallButton>
-          <SmallButton label="Move down" disabled={!canMoveDown} onClick={() => onMove(1)}>
-            ↓
-          </SmallButton>
-          {onRemove ? (
-            <SmallButton label="Remove" onClick={onRemove}>
-              ✕
-            </SmallButton>
-          ) : null}
+          <SmallButton label="Move up" icon="arrowUp" disabled={!canMoveUp} onClick={() => onMove(-1)} />
+          <SmallButton
+            label="Move down"
+            icon="arrowDown"
+            disabled={!canMoveDown}
+            onClick={() => onMove(1)}
+          />
+          {onRemove ? <SmallButton label="Remove" icon="close" onClick={onRemove} /> : null}
         </div>
       </div>
       {children}
@@ -769,14 +767,14 @@ function EntryCard({
 
 function SmallButton({
   label,
+  icon,
   onClick,
   disabled,
-  children,
 }: {
   label: string;
+  icon: IconName;
   onClick: () => void;
   disabled?: boolean;
-  children: React.ReactNode;
 }) {
   return (
     <button
@@ -785,9 +783,9 @@ function SmallButton({
       title={label}
       disabled={disabled}
       onClick={onClick}
-      className="grid size-8 place-items-center rounded-lg text-sm text-muted transition-colors hover:bg-sunken hover:text-text disabled:pointer-events-none disabled:opacity-30"
+      className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-text disabled:pointer-events-none disabled:opacity-30"
     >
-      {children}
+      <Icon name={icon} size={16} />
     </button>
   );
 }
@@ -819,11 +817,10 @@ function BulletEditor({
           />
           <SmallButton
             label={`Remove bullet ${index + 1}`}
+            icon="close"
             disabled={bullets.length === 1}
             onClick={() => onChange(bullets.filter((_, i) => i !== index))}
-          >
-            ✕
-          </SmallButton>
+          />
         </div>
       ))}
       <Button size="sm" variant="ghost" onClick={() => onChange([...bullets, ''])}>

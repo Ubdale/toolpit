@@ -17,6 +17,7 @@ import {
 } from '@/lib/pdf/operations';
 
 import { usePdfFiles } from './usePdfFiles';
+import { Icon, type IconName } from '@/components/ui/Icon';
 
 type Page = {
   /** Index in the original document. */
@@ -215,32 +216,27 @@ export default function OrganizeTool() {
                     <span className="flex items-center">
                       <PageAction
                         label={`Move page ${position + 1} earlier`}
+                        icon="chevronLeft"
                         onClick={() => movePage(position, -1)}
                         disabled={position === 0}
-                      >
-                        <path d="m14 6-6 6 6 6" />
-                      </PageAction>
+                      />
                       <PageAction
                         label={`Move page ${position + 1} later`}
+                        icon="chevronRight"
                         onClick={() => movePage(position, 1)}
                         disabled={position === pages.length - 1}
-                      >
-                        <path d="m10 6 6 6-6 6" />
-                      </PageAction>
+                      />
                       <PageAction
                         label={`Rotate page ${position + 1}`}
+                        icon="refresh"
                         onClick={() => rotatePage(position)}
-                      >
-                        <path d="M20 12a8 8 0 1 1-2.6-5.9" />
-                        <path d="M20 4v4h-4" />
-                      </PageAction>
+                      />
                       <PageAction
                         label={`Delete page ${position + 1}`}
+                        icon="delete"
                         onClick={() => deletePage(position)}
                         danger
-                      >
-                        <path d="M6 7h12M9 7V5h6v2M8 7l1 12h6l1-12" />
-                      </PageAction>
+                      />
                     </span>
                   </div>
                 </li>
@@ -273,13 +269,13 @@ function PageAction({
   onClick,
   disabled,
   danger,
-  children,
+  icon,
 }: {
   label: string;
   onClick: () => void;
   disabled?: boolean;
   danger?: boolean;
-  children: React.ReactNode;
+  icon: IconName;
 }) {
   return (
     <button
@@ -292,18 +288,7 @@ function PageAction({
         danger ? 'text-danger' : 'text-muted hover:text-text'
       }`}
     >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-        className="size-3.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {children}
-      </svg>
+      <Icon name={icon} size={14} />
     </button>
   );
 }

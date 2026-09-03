@@ -34,6 +34,7 @@ import { renderPages, toPdfBlob } from '@/lib/pdf/operations';
 import { EditorCanvas } from './EditorCanvas';
 import { TextLayer } from './TextLayer';
 import { usePdfFiles } from './usePdfFiles';
+import { Icon } from '@/components/ui/Icon';
 
 type Tool = AnnotationKind | 'select' | 'edit-text';
 
@@ -640,26 +641,33 @@ export default function EditTool() {
 
         <div className="flex items-center justify-between gap-3 border-y border-line py-2">
           <div className="flex items-center gap-1">
-            <ToolButton onClick={() => setPageIndex(pageIndex - 1)} disabled={pageIndex === 0}>
-              ←
+            <ToolButton
+              label="Previous page"
+              onClick={() => setPageIndex(pageIndex - 1)}
+              disabled={pageIndex === 0}
+            >
+              <Icon name="chevronLeft" size={16} />
             </ToolButton>
             <span className="min-w-24 text-center text-xs text-muted tabular-nums">
               Page {pageIndex + 1} of {file.pageCount}
             </span>
             <ToolButton
+              label="Next page"
               onClick={() => setPageIndex(pageIndex + 1)}
               disabled={pageIndex >= file.pageCount - 1}
             >
-              →
+              <Icon name="chevronRight" size={16} />
             </ToolButton>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted tabular-nums">{Math.round(zoom * 100)}%</span>
-            <ToolButton onClick={() => setZoom((value) => Math.max(0.35, value - 0.15))}>
-              −
+            <ToolButton label="Zoom out" onClick={() => setZoom((value) => Math.max(0.35, value - 0.15))}>
+              <Icon name="zoomOut" size={16} />
             </ToolButton>
-            <ToolButton onClick={() => setZoom((value) => Math.min(2.5, value + 0.15))}>+</ToolButton>
+            <ToolButton label="Zoom in" onClick={() => setZoom((value) => Math.min(2.5, value + 0.15))}>
+              <Icon name="zoomIn" size={16} />
+            </ToolButton>
           </div>
         </div>
 
@@ -1050,11 +1058,14 @@ function ToolButton({
   onClick,
   active,
   disabled,
+  label,
 }: {
   children: React.ReactNode;
   onClick: () => void;
   active?: boolean;
   disabled?: boolean;
+  /** Required when the button's content is only an icon. */
+  label?: string;
 }) {
   return (
     <button
@@ -1062,6 +1073,8 @@ function ToolButton({
       onClick={onClick}
       disabled={disabled}
       aria-pressed={active}
+      aria-label={label}
+      title={label}
       className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors disabled:pointer-events-none disabled:opacity-40 ${
         active
           ? 'border-accent bg-accent-soft text-text'

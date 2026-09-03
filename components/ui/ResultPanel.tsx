@@ -8,6 +8,7 @@ import { site } from '@/lib/site';
 
 import { Button } from './Button';
 import { useToast } from './Toast';
+import { Icon } from './Icon';
 
 export type DownloadTarget = { blob: Blob; filename: string };
 
@@ -38,7 +39,7 @@ export function ResultPanel({
       className="rounded-2xl border border-vault-line bg-vault-soft p-5 sm:p-6"
     >
       <p className="flex items-center gap-2 text-sm font-medium text-vault">
-        <CheckGlyph />
+        <Icon name="check" size={16} />
         {site.resultReady}
       </p>
 
@@ -60,7 +61,7 @@ export function ResultPanel({
               toast.show('Saved — and it never left your device.', 'vault');
             }}
           >
-            <DownloadGlyph />
+            <Icon name="download" size={16} />
             Download
           </Button>
           <Button variant="secondary" onClick={onReset}>
@@ -74,38 +75,4 @@ export function ResultPanel({
   );
 }
 
-function CheckGlyph() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="size-4 shrink-0"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m4 12 5 5L20 6" />
-    </svg>
-  );
-}
 
-function DownloadGlyph() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="size-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 4v12" />
-      <path d="m7 11 5 5 5-5" />
-      <path d="M4 19h16" />
-    </svg>
-  );
-}

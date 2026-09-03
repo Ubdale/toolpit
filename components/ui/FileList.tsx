@@ -1,6 +1,7 @@
 'use client';
 
 import { formatBytes } from '@/lib/format';
+import { Icon, type IconName } from './Icon';
 
 export type ListedFile = {
   id: string;
@@ -54,24 +55,24 @@ export function FileList({ files, onRemove, onMove, label }: FileListProps) {
             <span className="flex shrink-0 items-center gap-1">
               <IconButton
                 label={`Move ${file.name} up`}
+                icon="arrowUp"
                 disabled={index === 0}
                 onClick={() => onMove(file.id, -1)}
-              >
-                <path d="m6 14 6-6 6 6" />
-              </IconButton>
+              />
               <IconButton
                 label={`Move ${file.name} down`}
+                icon="arrowDown"
                 disabled={index === files.length - 1}
                 onClick={() => onMove(file.id, 1)}
-              >
-                <path d="m6 10 6 6 6-6" />
-              </IconButton>
+              />
             </span>
           ) : null}
 
-          <IconButton label={`Remove ${file.name}`} onClick={() => onRemove(file.id)}>
-            <path d="M6 6 18 18M18 6 6 18" />
-          </IconButton>
+          <IconButton
+            label={`Remove ${file.name}`}
+            icon="close"
+            onClick={() => onRemove(file.id)}
+          />
         </li>
       ))}
     </ol>
@@ -80,14 +81,14 @@ export function FileList({ files, onRemove, onMove, label }: FileListProps) {
 
 function IconButton({
   label,
+  icon,
   onClick,
   disabled,
-  children,
 }: {
   label: string;
+  icon: IconName;
   onClick: () => void;
   disabled?: boolean;
-  children: React.ReactNode;
 }) {
   return (
     <button
@@ -98,18 +99,7 @@ function IconButton({
       onClick={onClick}
       className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-text disabled:pointer-events-none disabled:opacity-30"
     >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-        className="size-4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {children}
-      </svg>
+      <Icon name={icon} size={16} />
     </button>
   );
 }

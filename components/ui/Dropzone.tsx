@@ -4,6 +4,7 @@ import { useId, useState, type DragEvent } from 'react';
 
 import { cn } from '@/lib/cn';
 import { site } from '@/lib/site';
+import { Icon } from './Icon';
 
 type DropzoneProps = {
   onFiles: (files: File[]) => void;
@@ -77,7 +78,7 @@ export function Dropzone({
             : 'border-line-strong bg-surface hover:border-accent hover:bg-sunken',
         )}
       >
-        <UploadGlyph />
+        <Icon name="upload" size={32} className="text-accent" />
         {/* Every caller already passes a label that says what to drop and that
             it can be clicked, so the generic empty-state line underneath was
             saying the same thing a second time in weaker words. It stays as the
@@ -93,22 +94,3 @@ export function Dropzone({
   );
 }
 
-function UploadGlyph() {
-  return (
-    <svg
-      aria-hidden="true"
-      focusable="false"
-      viewBox="0 0 24 24"
-      className="size-8 text-accent"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 16V4" />
-      <path d="m7 9 5-5 5 5" />
-      <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
-    </svg>
-  );
-}

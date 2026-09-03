@@ -1,5 +1,6 @@
 import { cn } from '@/lib/cn';
 import { site } from '@/lib/site';
+import { Icon } from '@/components/ui/Icon';
 
 /** The lock badge that appears on every single tool page. */
 export function PrivacyBadge({ className }: { className?: string }) {
@@ -17,20 +18,6 @@ export function PrivacyBadge({ className }: { className?: string }) {
   );
 }
 
-export function LockGlyph({ className = 'size-3.5' }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className={cn('shrink-0', className)}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="4" y="10" width="16" height="10" rx="2.5" />
-      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-    </svg>
-  );
+export function LockGlyph({ className }: { className?: string }) {
+  return <Icon name="lock" size={14} className={cn('shrink-0', className)} />;
 }

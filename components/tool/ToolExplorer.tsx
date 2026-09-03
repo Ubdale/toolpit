@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn';
 import { categories, tools, type CategoryId } from '@/lib/tools';
 
 import { ToolCard } from './ToolCard';
+import { Icon } from '@/components/ui/Icon';
 
 /**
  * The homepage tool directory, with a filter.
@@ -104,7 +105,7 @@ export function ToolExplorer() {
                   className="text-sm font-medium text-accent hover:text-accent-hover"
                 >
                   {entry.label} overview
-                  <span aria-hidden="true"> →</span>
+                  <Icon name="arrowForward" size={14} className="ml-1" />
                 </Link>
               </div>
               <p className="mt-2 max-w-2xl text-pretty text-sm text-muted">{entry.blurb}</p>

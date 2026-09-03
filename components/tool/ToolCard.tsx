@@ -4,6 +4,7 @@ import { cn } from '@/lib/cn';
 import type { Tool } from '@/lib/tools';
 
 import { ToolIcon } from './ToolIcon';
+import { Icon } from '@/components/ui/Icon';
 
 /**
  * The one card used for every tool link — homepage, category page, related.
@@ -56,12 +57,11 @@ export function ToolCard({
 
         <span className="mt-4 flex items-center gap-1 text-sm font-medium text-accent">
           {tool.status === 'live' ? 'Open tool' : 'Read more'}
-          <span
-            aria-hidden="true"
-            className="inline-block transition-transform duration-200 group-hover:translate-x-1"
-          >
-            →
-          </span>
+          <Icon
+            name="arrowForward"
+            size={16}
+            className="transition-transform duration-200 group-hover:translate-x-1"
+          />
         </span>
       </Link>
     </li>
