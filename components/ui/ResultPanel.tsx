@@ -7,6 +7,7 @@ import { formatBytes } from '@/lib/format';
 import { site } from '@/lib/site';
 
 import { Button } from './Button';
+import { useToast } from './Toast';
 
 export type DownloadTarget = { blob: Blob; filename: string };
 
@@ -29,6 +30,8 @@ export function ResultPanel({
   onReset,
   children,
 }: ResultPanelProps) {
+  const toast = useToast();
+
   return (
     <section
       aria-label="Result"
@@ -51,7 +54,12 @@ export function ResultPanel({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => downloadBlob(target.blob, target.filename)}>
+          <Button
+            onClick={() => {
+              downloadBlob(target.blob, target.filename);
+              toast.show('Saved — and it never left your device.', 'vault');
+            }}
+          >
             <DownloadGlyph />
             Download
           </Button>

@@ -2,7 +2,7 @@
 
 import { loadPdfLib } from '@/lib/pdf/runtime';
 
-import { toWinAnsi } from './encoding';
+import { toWinAnsi } from '@/lib/pdf/encoding';
 import { DEFAULT_XLSX_FONT_SIZE } from './styled';
 import type { StyledCell, StyledTable } from './styled';
 

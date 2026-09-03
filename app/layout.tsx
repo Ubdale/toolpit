@@ -6,6 +6,8 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 import { Footer } from '@/components/layout/Footer';
 import { Header } from '@/components/layout/Header';
 import { themeInitScript } from '@/components/layout/ThemeToggle';
+import { ToastProvider } from '@/components/ui/Toast';
+import { jsonLdProps, organizationJsonLd } from '@/lib/jsonld';
 import { site } from '@/lib/site';
 
 import './globals.css';
@@ -31,6 +33,11 @@ export const metadata: Metadata = {
   },
   description: site.oneLiner,
   applicationName: site.name,
+  authors: [{ name: site.name, url: site.url }],
+  creator: site.name,
+  publisher: site.name,
+  category: 'technology',
+  formatDetection: { telephone: false, address: false, email: false },
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
@@ -66,6 +73,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Applies the saved theme before first paint so dark-mode visitors
             never see a white flash. */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* The publisher behind every other structured-data node on the site. */}
+        <script {...jsonLdProps(organizationJsonLd())} />
       </head>
       <body className="flex min-h-dvh flex-col">
         <a
@@ -74,11 +83,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
-        <Header />
-        <main id="main" className="flex-1">
-          {children}
-        </main>
-        <Footer />
+        <ToastProvider>
+          <Header />
+          <main id="main" className="flex-1">
+            {children}
+          </main>
+          <Footer />
+        </ToastProvider>
         {/* Page views and real-user performance timings. Neither can see a file
             you opened, because no file is ever part of a request — but both do
             report something, so both are disclosed on /privacy rather than left

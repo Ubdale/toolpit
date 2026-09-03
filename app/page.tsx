@@ -3,24 +3,34 @@ import Link from 'next/link';
 
 import { Container } from '@/components/layout/Container';
 import { LockGlyph } from '@/components/tool/PrivacyBadge';
-import { ToolCard } from '@/components/tool/ToolCard';
+import { ToolExplorer } from '@/components/tool/ToolExplorer';
 import { ButtonLink } from '@/components/ui/Button';
-import { jsonLdProps, websiteJsonLd } from '@/lib/jsonld';
+import { itemListJsonLd, jsonLdProps, websiteJsonLd } from '@/lib/jsonld';
 import { pageMetadata } from '@/lib/seo';
 import { site } from '@/lib/site';
-import { categories, toolsIn } from '@/lib/tools';
+import { tools } from '@/lib/tools';
 
 export const metadata: Metadata = pageMetadata({
   title: 'Toolpit — Free Browser Tools for PDFs, Images & Vectors',
   description: site.oneLiner,
   path: '/',
+  cardHeading: 'Free online tools that never touch a server',
   keywords: [
     'free online tools',
     'browser pdf tools',
     'no upload file converter',
     'private file tools',
+    'free pdf editor',
+    'free resume builder',
+    'free chart maker',
+    'watermark remover',
   ],
 });
+
+/** The tools people arrive looking for, surfaced straight from the hero. */
+const POPULAR = ['/pdf/merge', '/pdf/edit', '/image/resize', '/create/resume'].map((href) =>
+  tools.find((tool) => tool.href === href)!,
+);
 
 const whyPoints = [
   {
@@ -41,6 +51,7 @@ export default function HomePage() {
   return (
     <>
       <script {...jsonLdProps(websiteJsonLd())} />
+      <script {...jsonLdProps(itemListJsonLd(tools, 'Every Toolpit tool'))} />
 
       <Container className="pt-14 pb-4 sm:pt-20">
         <div className="max-w-3xl">
@@ -48,21 +59,37 @@ export default function HomePage() {
             <LockGlyph />
             {site.promise}
           </p>
-          <h1 className="mt-6 text-title sm:text-display">
+          <h1 className="mt-6 text-balance text-title sm:text-display">
             Free online tools that never touch a server
           </h1>
-          <p className="mt-6 text-lg text-muted sm:text-xl">
-            Edit PDFs, convert images, trace vectors, and more — all running entirely in your
-            browser. No uploads, no accounts, no watermarks, no limits.
+          <p className="mt-6 text-pretty text-lg text-muted sm:text-xl">
+            Edit and sign PDFs, strip watermarks, resize images, trace vectors, build a resume,
+            chart your numbers — {tools.length} tools running entirely in your browser. No uploads,
+            no accounts, no watermarks, no limits.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <ButtonLink href="#tools" size="lg">
-              Browse the tools
+              Browse {tools.length} tools
             </ButtonLink>
             <ButtonLink href="/how-it-works" variant="secondary" size="lg">
               How it works
             </ButtonLink>
           </div>
+
+          <p className="mt-6 text-sm text-muted">
+            Popular:{' '}
+            {POPULAR.map((tool, index) => (
+              <span key={tool.href}>
+                {index > 0 ? ' · ' : ''}
+                <Link
+                  href={tool.href}
+                  className="text-text underline-offset-4 hover:text-accent hover:underline"
+                >
+                  {tool.name}
+                </Link>
+              </span>
+            ))}
+          </p>
         </div>
       </Container>
 
@@ -109,28 +136,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="mt-12 flex flex-col gap-14">
-          {categories.map((category) => (
-            <section key={category.id} id={category.segment} className="scroll-mt-28">
-              <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <h3 className="font-display text-heading">{category.label}</h3>
-                <Link
-                  href={`/${category.segment}`}
-                  className="text-sm font-medium text-accent hover:text-accent-hover"
-                >
-                  {category.label} overview
-                  <span aria-hidden="true"> →</span>
-                </Link>
-              </div>
-              <p className="mt-2 max-w-2xl text-sm text-muted">{category.blurb}</p>
-              <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {toolsIn(category.id).map((tool) => (
-                  <ToolCard key={tool.href} tool={tool} />
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
+        <ToolExplorer />
       </Container>
     </>
   );
