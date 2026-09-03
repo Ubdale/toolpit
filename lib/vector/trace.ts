@@ -270,6 +270,20 @@ export async function traceImage(
 function describeTraceFailure(cause: unknown): string {
   const message = cause instanceof Error ? cause.message : String(cause);
 
+  // wasm-bindgen decodes strings out of wasm memory with `fatal: true`. When
+  // the module panics, its panic hook tries to read the message back through
+  // that same path from memory the panic has already spoiled, so the decode
+  // fails and *that* is the error that reaches us — the real cause is a trap,
+  // and the guidance is the same.
+  if (/encoded data was not valid|TextDecoder/i.test(message)) {
+    return (
+      'The tracing engine ran out of room on this image. It is large and highly ' +
+      'detailed, which the Photograph preset turns into a very large number of ' +
+      'colour layers. Try the Poster or Logo preset, or lower the colour ' +
+      'precision in the advanced controls.'
+    );
+  }
+
   if (/unreachable|RuntimeError|memory access out of bounds/i.test(message)) {
     return (
       'The tracing engine stopped unexpectedly on this image. Try a smaller ' +

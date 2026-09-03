@@ -68,7 +68,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+    // The theme script below adds `dark` to this element before React
+    // hydrates, so the client's className legitimately differs from the
+    // server's. That is the entire point of running it pre-paint — suppressing
+    // the warning here is the documented fix, and it is scoped to this one
+    // element rather than the tree beneath it.
+    <html
+      lang="en"
+      className={`${inter.variable} ${spaceGrotesk.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         {/* Applies the saved theme before first paint so dark-mode visitors
             never see a white flash. */}
