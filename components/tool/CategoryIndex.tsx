@@ -1,5 +1,5 @@
 import { Container } from '@/components/layout/Container';
-import { breadcrumbJsonLd, jsonLdProps } from '@/lib/jsonld';
+import { breadcrumbJsonLd, itemListJsonLd, jsonLdProps } from '@/lib/jsonld';
 import { site } from '@/lib/site';
 import { getCategory, toolsIn, type CategoryId } from '@/lib/tools';
 
@@ -26,6 +26,7 @@ export function CategoryIndex({
   return (
     <>
       <script {...jsonLdProps(breadcrumbJsonLd(crumbs))} />
+      <script {...jsonLdProps(itemListJsonLd(toolsIn(id), category.label))} />
 
       <Container className="py-10 sm:py-14">
         <Breadcrumbs crumbs={crumbs} />

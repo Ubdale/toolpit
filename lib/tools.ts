@@ -10,7 +10,7 @@
 
 export type ToolStatus = 'live' | 'soon';
 
-export type CategoryId = 'pdf' | 'svg' | 'image' | 'record';
+export type CategoryId = 'pdf' | 'svg' | 'image' | 'record' | 'create';
 
 export type Category = {
   id: CategoryId;
@@ -62,8 +62,9 @@ export const categories: Category[] = [
   {
     id: 'image',
     segment: 'image',
-    label: 'AI image tools',
-    blurb: 'Background removal, upscaling and object removal — models run on your device.',
+    label: 'Image tools',
+    blurb:
+      'Resize, crop and convert — plus background removal and upscaling that run on your device.',
     phase: 3,
   },
   {
@@ -72,6 +73,13 @@ export const categories: Category[] = [
     label: 'Screen recorder',
     blurb: 'Capture, trim and annotate your screen with nothing to install.',
     phase: 4,
+  },
+  {
+    id: 'create',
+    segment: 'create',
+    label: 'Create & design',
+    blurb: 'Build a resume, a chart or a QR code from scratch and export it clean.',
+    phase: 5,
   },
 ];
 
@@ -335,6 +343,257 @@ export const tools: Tool[] = [
       'screen recorder no watermark',
     ],
     related: ['/image/remove-object', '/pdf/to-images', '/image/upscale', '/svg/optimize'],
+  },
+
+  // ------------------------------------------------ Phase 5: PDF authoring
+  {
+    href: '/pdf/edit',
+    category: 'pdf',
+    status: 'live',
+    name: 'PDF editor',
+    summary: 'Add text, shapes, highlights and signatures to a page.',
+    title: 'Free PDF Editor — Edit PDFs Online, No Upload | Toolpit',
+    description:
+      'Add text, boxes, highlights, images and signatures to a PDF in your browser. Free, no signup, no watermark, and your document is never uploaded.',
+    h1: 'Edit a PDF',
+    intro:
+      'Type on a page, highlight a paragraph, box a figure, drop in a logo, or sign where it says sign. Toolpit lays your edits over a live preview of the real page and bakes them into a normal PDF anyone can open. Every other online editor asks you to upload the contract first; this one never does, because the whole editor is running in this tab.',
+    keywords: [
+      'pdf editor',
+      'edit pdf online',
+      'free pdf editor',
+      'annotate pdf',
+      'sign pdf online',
+      'add text to pdf',
+    ],
+    related: ['/pdf/organize', '/pdf/watermark', '/pdf/page-numbers', '/pdf/merge'],
+  },
+  {
+    href: '/pdf/watermark',
+    category: 'pdf',
+    status: 'live',
+    name: 'Watermark PDF',
+    summary: 'Stamp text or a logo across every page.',
+    title: 'Add a Watermark to a PDF Free — No Upload | Toolpit',
+    description:
+      'Stamp DRAFT, CONFIDENTIAL or your own logo across every page of a PDF, in your browser. Free, no signup, and no watermark of ours on top of yours.',
+    h1: 'Watermark a PDF',
+    intro:
+      'Mark a document as a draft, as confidential, or as yours. Set the text or drop in a logo, choose the angle, size and opacity, and check it on a live preview before you commit. The stamp goes on locally, so a document you are labelling confidential never has to cross somebody else’s server to get the label.',
+    keywords: [
+      'watermark pdf',
+      'add watermark to pdf',
+      'pdf watermark online',
+      'stamp pdf confidential',
+      'draft watermark pdf',
+    ],
+    related: ['/pdf/edit', '/pdf/page-numbers', '/pdf/compress', '/pdf/merge'],
+  },
+  {
+    href: '/pdf/page-numbers',
+    category: 'pdf',
+    status: 'live',
+    name: 'Page numbers',
+    summary: 'Number the pages of any PDF.',
+    title: 'Add Page Numbers to a PDF Free — No Upload | Toolpit',
+    description:
+      'Add page numbers to a PDF in your browser — any position, any format, starting at any number. Free, no signup, no watermark, nothing uploaded.',
+    h1: 'Add page numbers to a PDF',
+    intro:
+      'Put numbers on a merged report, a scanned bundle, or a thesis that lost them somewhere along the way. Pick a corner, a format like “Page 3 of 40”, where to start counting and which pages to skip — then download the numbered PDF. All of it happens on your device.',
+    keywords: [
+      'add page numbers to pdf',
+      'pdf page numbers',
+      'number pdf pages',
+      'bates numbering pdf',
+    ],
+    related: ['/pdf/edit', '/pdf/watermark', '/pdf/organize', '/pdf/merge'],
+  },
+  {
+    href: '/pdf/remove-watermark',
+    category: 'pdf',
+    status: 'live',
+    name: 'Remove watermark',
+    summary: 'Find and delete a watermark, keeping the text.',
+    title: 'Remove a Watermark from a PDF Free — No Upload | Toolpit',
+    description:
+      'Find and delete watermarks, stamps and layers from a PDF in your browser. The text stays text. Free, no signup, no watermark of ours, nothing uploaded.',
+    h1: 'Remove a watermark from a PDF',
+    intro:
+      'Most watermarks are a separate object in the file — a stamp, a layer, a line of text, or an image repeated on every page. Toolpit reads the document’s structure, shows you exactly what it found, and deletes only what you tick. Because it removes the object rather than painting over it, your document comes back with its text still selectable and searchable. If a mark turns out to be baked into a scan, the tool says so instead of quietly doing nothing.',
+    keywords: [
+      'remove watermark from pdf',
+      'pdf watermark remover',
+      'delete watermark pdf',
+      'remove draft stamp pdf',
+      'free watermark remover',
+    ],
+    related: ['/pdf/watermark', '/pdf/edit', '/image/remove-watermark', '/pdf/organize'],
+  },
+
+  // ----------------------------------------------- Phase 5: image utilities
+  {
+    href: '/image/resize',
+    category: 'image',
+    status: 'live',
+    name: 'Resize image',
+    summary: 'Scale images to an exact size, in bulk.',
+    title: 'Resize Images Free Online — Bulk, No Upload | Toolpit',
+    description:
+      'Resize JPG, PNG, WebP and AVIF images to exact dimensions in your browser. Batch resize dozens at once — free, no signup, no watermark, nothing uploaded.',
+    h1: 'Resize an image',
+    intro:
+      'Scale a photo to the exact width a form demands, or push a whole folder of product shots through the same size in one go. Lock the aspect ratio or set both edges, choose how the image fits, and take away a single file or a ZIP of the lot. There is no file-count limit, because there is no server charging us per upload.',
+    keywords: [
+      'resize image',
+      'image resizer',
+      'bulk resize images',
+      'change image dimensions',
+      'resize jpg online',
+    ],
+    related: ['/image/crop', '/image/convert', '/image/upscale', '/pdf/images-to-pdf'],
+  },
+  {
+    href: '/image/convert',
+    category: 'image',
+    status: 'live',
+    name: 'Convert image',
+    summary: 'Swap between PNG, JPG, WebP and AVIF.',
+    title: 'Convert Images Free — PNG, JPG, WebP & AVIF | Toolpit',
+    description:
+      'Convert images between PNG, JPG, WebP and AVIF in your browser, one at a time or in bulk. Free, no signup, no watermark, and nothing is uploaded.',
+    h1: 'Convert an image',
+    intro:
+      'Move a screenshot to a format an older system will actually accept, or take a folder of PNGs to WebP and halve what your site ships. Pick the target format and quality, convert as many files as you like at once, and download them one by one or as a ZIP — all encoded by your own browser.',
+    keywords: [
+      'convert image',
+      'png to jpg',
+      'jpg to webp',
+      'webp to png',
+      'image converter',
+      'bulk image converter',
+    ],
+    related: ['/image/resize', '/image/crop', '/pdf/images-to-pdf', '/svg/image-to-svg'],
+  },
+  {
+    href: '/image/crop',
+    category: 'image',
+    status: 'live',
+    name: 'Crop image',
+    summary: 'Trim to a ratio or an exact box.',
+    title: 'Crop Images Free Online — No Upload, No Watermark | Toolpit',
+    description:
+      'Crop a photo to a square, a 16:9 banner or an exact pixel box, right in your browser. Free, no signup, no watermark, and your image is never uploaded.',
+    h1: 'Crop an image',
+    intro:
+      'Drag a crop box over your photo, or snap it to a ratio — a square for an avatar, 16:9 for a banner, 4:5 for a feed. Type exact numbers when the box has to be exact. The crop is applied by your browser and downloaded straight back to you, at full resolution and with nothing stamped on it.',
+    keywords: [
+      'crop image',
+      'image cropper',
+      'crop photo online',
+      'square crop tool',
+      'crop jpg online',
+    ],
+    related: [
+      '/image/resize',
+      '/image/convert',
+      '/image/remove-background',
+      '/svg/favicon-generator',
+    ],
+  },
+  {
+    href: '/image/remove-watermark',
+    category: 'image',
+    status: 'live',
+    name: 'Remove watermark',
+    summary: 'Erase a watermark from a whole set of photos.',
+    title: 'Remove Watermarks from Images Free — Batch, No Upload | Toolpit',
+    description:
+      'Erase a watermark from a photo — or from a whole folder at once — with AI that runs on your device. Free, no signup, no watermark of ours, nothing uploaded.',
+    h1: 'Remove a watermark from an image',
+    intro:
+      'Draw a box over the watermark and an on-device AI model repaints what was underneath. The useful part is the batch: a watermark usually sits in the same place on every image in a set, so mark it once and it comes off all of them, scaled to each. The model runs on your own hardware, so a folder of photos is neither uploaded nor counted against a quota.',
+    keywords: [
+      'remove watermark from image',
+      'watermark remover',
+      'remove watermark from photo',
+      'bulk watermark remover',
+      'erase logo from image',
+    ],
+    related: [
+      '/image/remove-object',
+      '/pdf/remove-watermark',
+      '/image/crop',
+      '/image/remove-background',
+    ],
+  },
+
+  // ------------------------------------------------ Phase 5: create & design
+  {
+    href: '/create/resume',
+    category: 'create',
+    status: 'live',
+    name: 'Resume builder',
+    summary: 'Build a CV from a template and export a real PDF.',
+    title: 'Free Resume & CV Builder — Templates, No Signup | Toolpit',
+    description:
+      'Build a resume from professional templates and download a print-ready PDF with selectable text. Free, no signup, no watermark — your details never leave your device.',
+    h1: 'Build a resume',
+    intro:
+      'Fill in your experience once, then try it in every template until one fits. Toolpit exports a real vector PDF with selectable text, which is what applicant tracking systems actually read — not a picture of a CV. Your employment history, address and phone number stay in this tab: there is no account to make and no server holding a draft of your life.',
+    keywords: [
+      'resume builder',
+      'cv maker',
+      'free resume templates',
+      'resume pdf',
+      'curriculum vitae builder',
+      'ats friendly resume',
+    ],
+    related: ['/create/chart', '/create/qr-code', '/pdf/edit', '/pdf/merge'],
+  },
+  {
+    href: '/create/chart',
+    category: 'create',
+    status: 'live',
+    name: 'Chart maker',
+    summary: 'Turn a table of numbers into a clean chart.',
+    title: 'Free Chart & Graph Maker — Export PNG & SVG | Toolpit',
+    description:
+      'Paste a table or drop a CSV and get a bar, line, area, pie or scatter chart you can export as PNG or SVG. Free, no signup, no watermark, nothing uploaded.',
+    h1: 'Make a chart',
+    intro:
+      'Paste your numbers straight out of a spreadsheet, pick a chart type, and get something you can put in a deck without apologising for it — sensible colours, readable labels, no chart-junk. Export a crisp PNG for slides or an SVG that stays sharp in print. Your figures are charted in this tab and never uploaded, which matters when they are revenue.',
+    keywords: [
+      'chart maker',
+      'graph maker',
+      'bar chart generator',
+      'line graph maker',
+      'csv to chart',
+      'pie chart maker',
+    ],
+    related: ['/create/resume', '/create/qr-code', '/pdf/pdf-to-excel', '/svg/optimize'],
+  },
+  {
+    href: '/create/qr-code',
+    category: 'create',
+    status: 'live',
+    name: 'QR code generator',
+    summary: 'Make a QR code as a sharp SVG or PNG.',
+    title: 'Free QR Code Generator — SVG & PNG, No Signup | Toolpit',
+    description:
+      'Generate a QR code for a link, Wi-Fi network, contact card or plain text. Export SVG or PNG — free, no signup, no watermark, and no tracking redirect.',
+    h1: 'Generate a QR code',
+    intro:
+      'Make a QR code for a link, a Wi-Fi network, a contact card or any text at all. Toolpit encodes it in your browser and hands you the real code — not a redirect through a service that can expire it, count your scans, or start charging once the poster is printed. Export an SVG for print or a PNG at any size.',
+    keywords: [
+      'qr code generator',
+      'free qr code',
+      'qr code svg',
+      'wifi qr code generator',
+      'vcard qr code',
+      'qr code no expiry',
+    ],
+    related: ['/create/chart', '/create/resume', '/svg/favicon-generator', '/svg/optimize'],
   },
 ];
 

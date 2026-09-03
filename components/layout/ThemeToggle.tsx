@@ -36,7 +36,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
       aria-pressed={isDark}
-      className="grid size-10 place-items-center rounded-xl border border-line text-muted transition-colors hover:bg-sunken hover:text-text"
+      className="grid size-11 place-items-center rounded-xl border border-line text-muted transition-colors hover:bg-sunken hover:text-text"
     >
       {/* Both glyphs render; CSS picks one, so there is no hydration mismatch
           and no icon flash before the effect runs. */}

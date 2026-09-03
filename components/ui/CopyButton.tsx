@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { Button, type ButtonSize, type ButtonVariant } from './Button';
+import { useToast } from './Toast';
 
 export function CopyButton({
   text,
@@ -16,6 +17,7 @@ export function CopyButton({
   size?: ButtonSize;
 }) {
   const [copied, setCopied] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     if (!copied) return;
@@ -27,6 +29,7 @@ export function CopyButton({
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
+      toast.show('Copied to your clipboard.');
     } catch {
       // Clipboard access can be refused; the textarea is still selectable.
     }

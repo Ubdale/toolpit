@@ -14,7 +14,7 @@ export function Footer() {
   return (
     <footer className="mt-24 border-t border-line bg-sunken">
       <Container className="py-12">
-        <div className="grid gap-10 md:grid-cols-[1.2fr_repeat(4,1fr)]">
+        <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-[1.2fr_repeat(5,1fr)]">
           <div>
             <div className="flex items-center gap-2.5 font-display text-lg font-semibold">
               <LogoMark className="size-6 text-accent" />

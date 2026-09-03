@@ -78,8 +78,11 @@ export function Dropzone({
         )}
       >
         <UploadGlyph />
-        <span className="text-base font-medium">{label}</span>
-        <span className="text-sm text-muted">{site.emptyState}</span>
+        {/* Every caller already passes a label that says what to drop and that
+            it can be clicked, so the generic empty-state line underneath was
+            saying the same thing a second time in weaker words. It stays as the
+            fallback for a caller that has nothing more specific to say. */}
+        <span className="text-base font-medium">{label || site.emptyState}</span>
         {hint ? (
           <span id={`${inputId}-hint`} className="text-xs text-muted">
             {hint}

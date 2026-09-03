@@ -97,18 +97,44 @@ inline script.
 
 ## What is built
 
-All fifteen tools are live.
+All twenty-six tools are live.
 
 | Area | Tools | Engine |
 |---|---|---|
 | PDF | Merge, split, reorder/rotate, compress, images→PDF, PDF→images | `pdf-lib` + `pdfjs-dist` |
+| PDF authoring | Editor (text, shapes, highlight, freehand/signature, images), watermark, page numbers, structural watermark removal | `pdf-lib` + own content-stream lexer |
 | Spreadsheets | Excel→PDF and PDF→Excel, style-preserving, both in bulk | ExcelJS + SheetJS + `pdf-lib` / `pdfjs-dist` |
 | Vector | SVG optimizer, image→vector tracer (SVG/PDF/AI/EPS), favicon generator | `svgo`, VTracer wasm, canvas |
+| Image | Resize, convert (PNG/JPG/WebP/AVIF) and crop, all in bulk | Canvas, with stepped downscaling |
+| AI erase | Watermark removal across a whole set, regions stored proportionally | MI-GAN via `onnxruntime-web` |
 | AI image | Background remover (+ matte refinement and backdrops), upscaler (three model sizes), object removal (crop-to-mask, undo/redo) | `@imgly/background-removal`, UpscalerJS/TF.js, MI-GAN via `onnxruntime-web` |
 | Capture | Screen recorder with live annotation and trim | `getDisplayMedia` + `MediaRecorder` |
+| Create | Resume builder (6 templates, ATS-readable vector PDF), chart maker (7 types, PNG/SVG), QR generator | `pdf-lib`, own SVG renderer, own QR encoder |
 
 Multi-file output is bundled by a dependency-free store-only ZIP writer in
 [`lib/download.ts`](lib/download.ts).
+
+Four things are implemented from the spec rather than taken as dependencies,
+for the same reason as that ZIP writer — the algorithm is smaller than the
+library, and shipping it means one less thing between a visitor and their file:
+
+- **[`lib/qr/encode.ts`](lib/qr/encode.ts)** — a full ISO/IEC 18004 encoder
+  (versions 1-40, all four ECC levels, numeric/alphanumeric/byte mode,
+  Reed-Solomon over GF(256), all eight masks scored by the spec's penalty
+  rules). Every hosted QR service points the code at a redirect it controls;
+  this points at your content.
+- **[`lib/pdf/content-stream.ts`](lib/pdf/content-stream.ts)** — a lexer and
+  writer for PDF content streams, which is what lets the watermark remover
+  delete the instruction that draws a watermark and write everything else back
+  untouched. Every operand keeps its original source text, so the round trip
+  cannot corrupt a page it was only meant to read.
+- **[`lib/chart/render.ts`](lib/chart/render.ts)** — an SVG chart renderer
+  whose palette is validated for colour-blind separation and surface contrast
+  in both themes, not chosen by eye.
+- **[`lib/resume/layout.ts`](lib/resume/layout.ts)** — one layout pass that
+  emits positioned blocks, which the HTML preview positions and the PDF writer
+  draws. Building the page twice is how resume builders ship a PDF that does
+  not match the preview.
 
 ### How the AI models are delivered
 

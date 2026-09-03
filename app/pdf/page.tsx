@@ -6,9 +6,15 @@ import { pageMetadata } from '@/lib/seo';
 export const metadata: Metadata = pageMetadata({
   title: 'Free PDF Tools — No Upload, No Signup, No Watermark | Toolpit',
   description:
-    'Merge, split, rotate, compress and convert PDFs in your browser. Every Toolpit PDF tool is free and processes files on your device — nothing is uploaded.',
+    'Merge, split, rotate, edit, watermark, compress and convert PDFs in your browser. Every Toolpit PDF tool is free and processes files on your device — nothing is uploaded.',
   path: '/pdf',
-  keywords: ['free pdf tools', 'online pdf editor', 'pdf tools no upload', 'private pdf tools'],
+  keywords: [
+    'free pdf tools',
+    'online pdf editor',
+    'pdf tools no upload',
+    'private pdf tools',
+    'edit pdf free',
+  ],
 });
 
 export default function PdfCategoryPage() {
@@ -16,7 +22,7 @@ export default function PdfCategoryPage() {
     <CategoryIndex
       id="pdf"
       h1="Free PDF tools"
-      intro="Six PDF tools that do the everyday jobs — combining, splitting, reordering, rotating, shrinking and converting — without ever asking you to hand your document to a server. Pick a tool, drop your file in, and download the result."
+      intro="Twelve PDF tools that do the everyday jobs — editing, signing, combining, splitting, reordering, rotating, watermarking and un-watermarking, numbering, shrinking and converting — without ever asking you to hand your document to a server. Pick a tool, drop your file in, and download the result."
     />
   );
 }
