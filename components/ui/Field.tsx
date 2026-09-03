@@ -4,6 +4,8 @@ import { useId, type ComponentProps, type ReactNode } from 'react';
 
 import { cn } from '@/lib/cn';
 
+import { Slider } from './Slider';
+
 type FieldProps = {
   label: string;
   hint?: string;
@@ -36,14 +38,6 @@ const controlClasses =
 
 export function TextInput({ className, ...props }: ComponentProps<'input'>) {
   return <input type="text" className={cn(controlClasses, className)} {...props} />;
-}
-
-export function Select({ className, children, ...props }: ComponentProps<'select'>) {
-  return (
-    <select className={cn(controlClasses, 'pr-8', className)} {...props}>
-      {children}
-    </select>
-  );
 }
 
 type RadioOption<T extends string> = {
@@ -108,12 +102,43 @@ export function RadioCards<T extends string>({
   );
 }
 
-export function RangeInput({ className, ...props }: ComponentProps<'input'>) {
+/**
+ * Compatibility shim over {@link Slider}.
+ *
+ * The call sites that use this render their own value into the surrounding
+ * `Field` label ("Text size — 10pt"), so the slider's own read-out is turned
+ * off here to avoid printing the number twice. New code should use `Slider`
+ * directly, which additionally offers marks, ranges, a typed input and
+ * separate live/committed events.
+ */
+export function RangeInput({
+  className,
+  min,
+  max,
+  step,
+  value,
+  disabled,
+  onChange,
+  id,
+}: ComponentProps<'input'>) {
+  const emit = (next: number) => {
+    // The existing call sites read `event.target.value`, so the shim hands
+    // them the shape they already expect rather than changing sixty signatures.
+    onChange?.({ target: { value: String(next) } } as never);
+  };
+
   return (
-    <input
-      type="range"
-      className={cn('w-full accent-accent', className)}
-      {...props}
+    <Slider
+      id={id}
+      className={cn('w-full', className)}
+      value={Number(value ?? 0)}
+      min={Number(min ?? 0)}
+      max={Number(max ?? 100)}
+      step={Number(step ?? 1)}
+      disabled={disabled}
+      valueLabel="none"
+      onInput={(next) => emit(next as number)}
+      onChange={(next) => emit(next as number)}
     />
   );
 }

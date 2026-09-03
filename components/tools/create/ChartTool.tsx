@@ -4,8 +4,9 @@ import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEven
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { Dropzone } from '@/components/ui/Dropzone';
-import { ErrorMessage, Field, RangeInput, Select, TextInput } from '@/components/ui/Field';
+import { ErrorMessage, Field, RangeInput, TextInput } from '@/components/ui/Field';
 import { chartToPng, renderChart } from '@/lib/chart/render';
 import {
   ChartDataError,
@@ -251,21 +252,17 @@ export default function ChartTool() {
         <ToolSurface className="flex flex-col gap-5">
           <ToolSectionHeading>Chart</ToolSectionHeading>
 
-          <Field label="Type">
-            {({ id }) => (
-              <Select
-                id={id}
-                value={type}
-                onChange={(event) => setType(event.target.value as ChartType)}
-              >
-                {chartTypes.map((entry) => (
-                  <option key={entry.value} value={entry.value}>
-                    {entry.label} — {entry.description}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
+          <Dropdown
+            label="Type"
+            searchable
+            value={type}
+            onChange={(value) => value && setType(value as ChartType)}
+            options={chartTypes.map((entry) => ({
+              value: entry.value,
+              label: entry.label,
+              description: entry.description,
+            }))}
+          />
 
           <Field label="Title">
             {({ id }) => (
@@ -307,21 +304,16 @@ export default function ChartTool() {
             </div>
           ) : null}
 
-          <Field label="Colours">
-            {({ id }) => (
-              <Select
-                id={id}
-                value={palette}
-                onChange={(event) => setPalette(event.target.value as PaletteId)}
-              >
-                {palettes.map((entry) => (
-                  <option key={entry.value} value={entry.value}>
-                    {entry.label} — {entry.description}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
+          <Dropdown
+            label="Colours"
+            value={palette}
+            onChange={(value) => value && setPalette(value as PaletteId)}
+            options={palettes.map((entry) => ({
+              value: entry.value,
+              label: entry.label,
+              description: entry.description,
+            }))}
+          />
 
           {seriesCount > 0 ? (
             <ul className="flex flex-wrap gap-2">
@@ -343,18 +335,16 @@ export default function ChartTool() {
             </ul>
           ) : null}
 
-          <Field label="Export theme" hint="Independent of the theme you are browsing in.">
-            {({ id }) => (
-              <Select
-                id={id}
-                value={theme}
-                onChange={(event) => setTheme(event.target.value as ChartTheme)}
-              >
-                <option value="light">Light background</option>
-                <option value="dark">Dark background</option>
-              </Select>
-            )}
-          </Field>
+          <Dropdown
+            label="Export theme"
+            hint="Independent of the theme you are browsing in."
+            value={theme}
+            onChange={(value) => value && setTheme(value as ChartTheme)}
+            options={[
+              { value: 'light', label: 'Light background' },
+              { value: 'dark', label: 'Dark background' },
+            ]}
+          />
 
           <fieldset className="flex flex-col gap-2.5">
             <legend className="mb-1 text-sm font-medium">Show</legend>

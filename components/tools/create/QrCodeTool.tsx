@@ -4,8 +4,9 @@ import { useMemo, useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { CopyButton } from '@/components/ui/CopyButton';
-import { ErrorMessage, Field, RangeInput, Select, TextInput } from '@/components/ui/Field';
+import { ErrorMessage, Field, RangeInput, TextInput } from '@/components/ui/Field';
 import { downloadBlob } from '@/lib/download';
 import { eccLevels, encodeQr, QrTooLongError, type EccLevel } from '@/lib/qr/encode';
 import {
@@ -108,21 +109,12 @@ export default function QrCodeTool() {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
       <ToolSurface className="flex flex-col gap-5">
-        <Field label="What should the code do?">
-          {({ id }) => (
-            <Select
-              id={id}
-              value={kind}
-              onChange={(event) => setKind(event.target.value as PayloadKind)}
-            >
-              {payloadKinds.map((entry) => (
-                <option key={entry.value} value={entry.value}>
-                  {entry.label}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
+        <Dropdown
+          label="What should the code do?"
+          value={kind}
+          onChange={(value) => value && setKind(value as PayloadKind)}
+          options={payloadKinds.map((entry) => ({ value: entry.value, label: entry.label }))}
+        />
 
         {kind === 'url' ? (
           <Field label="Link" hint="A scheme is added for you if you leave it off.">
@@ -164,21 +156,18 @@ export default function QrCodeTool() {
                 />
               )}
             </Field>
-            <Field label="Security">
-              {({ id }) => (
-                <Select
-                  id={id}
-                  value={wifi.security}
-                  onChange={(event) =>
-                    setWifi({ ...wifi, security: event.target.value as typeof wifi.security })
-                  }
-                >
-                  <option value="WPA">WPA / WPA2 / WPA3</option>
-                  <option value="WEP">WEP</option>
-                  <option value="nopass">Open — no password</option>
-                </Select>
-              )}
-            </Field>
+            <Dropdown
+              label="Security"
+              value={wifi.security}
+              onChange={(value) =>
+                value && setWifi({ ...wifi, security: value as typeof wifi.security })
+              }
+              options={[
+                { value: 'WPA', label: 'WPA / WPA2 / WPA3' },
+                { value: 'WEP', label: 'WEP' },
+                { value: 'nopass', label: 'Open — no password' },
+              ]}
+            />
             {wifi.security !== 'nopass' ? (
               <Field
                 label="Password"
@@ -376,17 +365,16 @@ export default function QrCodeTool() {
           )}
         </Field>
 
-        <Field label="Error correction">
-          {({ id }) => (
-            <Select id={id} value={ecc} onChange={(event) => setEcc(event.target.value as EccLevel)}>
-              {eccLevels.map((level) => (
-                <option key={level.value} value={level.value}>
-                  {level.label} — {level.description}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
+        <Dropdown
+          label="Error correction"
+          value={ecc}
+          onChange={(value) => value && setEcc(value as EccLevel)}
+          options={eccLevels.map((level) => ({
+            value: level.value,
+            label: level.label,
+            description: level.description,
+          }))}
+        />
       </ToolSurface>
 
       <ToolSurface className="flex flex-col gap-5">

@@ -6,6 +6,7 @@ import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
 import { Button } from '@/components/ui/Button';
 import { ErrorMessage } from '@/components/ui/Field';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Slider } from '@/components/ui/Slider';
 import { downloadBlob } from '@/lib/download';
 import { formatBytes } from '@/lib/format';
 import {
@@ -329,14 +330,14 @@ export default function ScreenRecorderTool() {
 
               <label className="flex items-center gap-2 text-sm">
                 Size
-                <input
-                  type="range"
+                <Slider
+                  value={penWidth}
                   min={2}
                   max={16}
                   step={1}
-                  value={penWidth}
-                  onChange={(event) => setPenWidth(Number(event.target.value))}
-                  className="w-24 accent-accent"
+                  valueLabel="none"
+                  onInput={(next) => setPenWidth(next as number)}
+                  onChange={(next) => setPenWidth(next as number)}
                 />
               </label>
 
@@ -403,40 +404,32 @@ export default function ScreenRecorderTool() {
 
           <div className="mt-5 flex flex-col gap-3">
             <ToolSectionHeading>Trim</ToolSectionHeading>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-sm">
-                Start: {formatClock(range.start)}
-                <input
-                  type="range"
-                  min={0}
-                  max={Math.max(0.1, recording.duration)}
-                  step={0.1}
-                  value={range.start}
-                  onChange={(event) => {
-                    const start = Math.min(Number(event.target.value), range.end - 0.5);
-                    setRange((current) => ({ ...current, start }));
-                    if (reviewRef.current) reviewRef.current.currentTime = start;
-                  }}
-                  className="mt-1 w-full accent-accent"
-                />
-              </label>
-              <label className="text-sm">
-                End: {formatClock(range.end)}
-                <input
-                  type="range"
-                  min={0}
-                  max={Math.max(0.1, recording.duration)}
-                  step={0.1}
-                  value={range.end}
-                  onChange={(event) => {
-                    const end = Math.max(Number(event.target.value), range.start + 0.5);
-                    setRange((current) => ({ ...current, end }));
-                    if (reviewRef.current) reviewRef.current.currentTime = end;
-                  }}
-                  className="mt-1 w-full accent-accent"
-                />
-              </label>
-            </div>
+            {/* One dual-handle slider rather than two independent ones: the
+                two values describe a single span, and a range control makes the
+                clip you are keeping visible as the filled section between them. */}
+            <Slider
+              label="Keep from / to"
+              value={[range.start, range.end]}
+              min={0}
+              max={Math.max(0.1, recording.duration)}
+              step={0.1}
+              precision={1}
+              format={formatClock}
+              onInput={(value) => {
+                const [start, end] = value as [number, number];
+                // Never let the handles cross or meet — a zero-length clip
+                // cannot be encoded.
+                if (end - start < 0.5) return;
+                setRange({ start, end });
+                // Seek to whichever handle the visitor actually moved.
+                const moved = start !== range.start ? start : end;
+                if (reviewRef.current) reviewRef.current.currentTime = moved;
+              }}
+              onChange={(value) => {
+                const [start, end] = value as [number, number];
+                if (end - start >= 0.5) setRange({ start, end });
+              }}
+            />
 
             {trimProgress !== null ? (
               <ProgressBar value={trimProgress} label="Re-encoding the trimmed clip…" />

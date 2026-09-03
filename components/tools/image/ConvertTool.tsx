@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { Dropzone } from '@/components/ui/Dropzone';
-import { ErrorMessage, Field, RangeInput, Select, TextInput } from '@/components/ui/Field';
+import { ErrorMessage, Field, RangeInput, TextInput } from '@/components/ui/Field';
 import { FileList } from '@/components/ui/FileList';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { stripExtension } from '@/lib/format';
@@ -147,26 +148,18 @@ export default function ConvertTool() {
       <ToolSurface className="flex flex-col gap-5">
         <ToolSectionHeading>Convert to</ToolSectionHeading>
 
-        <Field label="Format">
-          {({ id }) => (
-            <Select
-              id={id}
-              value={format}
-              onChange={(event) => setFormat(event.target.value as ImageFormat)}
-            >
-              {imageFormats.map((entry) => (
-                <option
-                  key={entry.value}
-                  value={entry.value}
-                  disabled={supported[entry.value] === false}
-                >
-                  {entry.label}
-                  {supported[entry.value] === false ? ' — not supported by this browser' : ''}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
+        <Dropdown
+          label="Format"
+          value={format}
+          onChange={(value) => value && setFormat(value as ImageFormat)}
+          options={imageFormats.map((entry) => ({
+            value: entry.value,
+            label: entry.label,
+            disabled: supported[entry.value] === false,
+            description:
+              supported[entry.value] === false ? 'Not supported by this browser' : undefined,
+          }))}
+        />
 
         {lossy ? (
           <Field

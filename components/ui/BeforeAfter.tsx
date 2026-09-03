@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
+import { Slider } from '@/components/ui/Slider';
 
 /**
  * Draggable split comparison.
@@ -71,18 +72,17 @@ export function BeforeAfter({
         </span>
       </div>
 
-      <label htmlFor={id} className="sr-only">
-        Comparison position — drag to reveal more of {beforeLabel} or {afterLabel}
-      </label>
-      <input
+      <Slider
         id={id}
-        type="range"
+        label={`Comparison position — drag to reveal more of ${beforeLabel} or ${afterLabel}`}
+        value={position}
         min={0}
         max={100}
         step={1}
-        value={position}
-        onChange={(event) => setPosition(Number(event.target.value))}
-        className="w-full accent-accent"
+        suffix="%"
+        valueLabel="none"
+        onInput={(value) => setPosition(value as number)}
+        onChange={(value) => setPosition(value as number)}
       />
     </div>
   );

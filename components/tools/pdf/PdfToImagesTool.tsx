@@ -14,6 +14,7 @@ import { formatBytes, parsePageRanges, stripExtension } from '@/lib/format';
 import { renderPages } from '@/lib/pdf/operations';
 
 import { usePdfFiles } from './usePdfFiles';
+import { Dropdown } from '@/components/ui/Dropdown';
 
 type Format = 'image/png' | 'image/jpeg';
 type Resolution = '1' | '2' | '3';
@@ -196,23 +197,17 @@ export default function PdfToImagesTool() {
               ]}
             />
 
-            <Field label="Resolution" hint={RESOLUTIONS[resolution].description}>
-              {({ id, describedBy }) => (
-                <select
-                  id={id}
-                  aria-describedby={describedBy}
-                  value={resolution}
-                  onChange={(event) => setResolution(event.target.value as Resolution)}
-                  className="h-11 w-full rounded-xl border border-line bg-surface px-3 pr-8 text-sm hover:border-line-strong focus:border-accent"
-                >
-                  {Object.entries(RESOLUTIONS).map(([value, meta]) => (
-                    <option key={value} value={value}>
-                      {meta.label}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </Field>
+            <Dropdown
+              label="Resolution"
+              hint={RESOLUTIONS[resolution].description}
+              value={resolution}
+              onChange={(value) => value && setResolution(value as Resolution)}
+              options={Object.entries(RESOLUTIONS).map(([value, meta]) => ({
+                value,
+                label: meta.label,
+                description: meta.description,
+              }))}
+            />
 
             <div className="flex flex-col gap-3">
               <label className="flex items-center gap-2.5 text-sm font-medium">

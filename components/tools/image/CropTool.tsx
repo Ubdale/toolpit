@@ -4,8 +4,9 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPoi
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { Dropzone } from '@/components/ui/Dropzone';
-import { ErrorMessage, Field, RangeInput, Select, TextInput } from '@/components/ui/Field';
+import { ErrorMessage, Field, RangeInput, TextInput } from '@/components/ui/Field';
 import { ResultPanel } from '@/components/ui/ResultPanel';
 import { stripExtension } from '@/lib/format';
 import {
@@ -350,17 +351,12 @@ export default function CropTool() {
       <ToolSurface className="flex flex-col gap-5">
         <ToolSectionHeading>Crop</ToolSectionHeading>
 
-        <Field label="Aspect ratio">
-          {({ id }) => (
-            <Select id={id} value={ratioKey} onChange={(event) => setRatioKey(event.target.value)}>
-              {aspectRatios.map((entry) => (
-                <option key={entry.value} value={entry.value}>
-                  {entry.label}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
+        <Dropdown
+          label="Aspect ratio"
+          value={ratioKey}
+          onChange={(value) => setRatioKey(value ?? 'free')}
+          options={aspectRatios.map((entry) => ({ value: entry.value, label: entry.label }))}
+        />
 
         {rect ? (
           <div className="grid grid-cols-2 gap-3">
@@ -421,22 +417,15 @@ export default function CropTool() {
         </Button>
 
         <div className="border-t border-line pt-4">
-          <Field label="Output format">
-            {({ id }) => (
-              <Select
-                id={id}
-                value={format}
-                onChange={(event) => setFormat(event.target.value as ImageFormat | 'keep')}
-              >
-                <option value="keep">Keep the original format</option>
-                {imageFormats.map((entry) => (
-                  <option key={entry.value} value={entry.value}>
-                    {entry.label}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
+          <Dropdown
+            label="Output format"
+            value={format}
+            onChange={(value) => value && setFormat(value as ImageFormat | 'keep')}
+            options={[
+              { value: 'keep', label: 'Keep the original format' },
+              ...imageFormats.map((entry) => ({ value: entry.value, label: entry.label })),
+            ]}
+          />
         </div>
 
         {outputFormat() !== 'image/png' ? (

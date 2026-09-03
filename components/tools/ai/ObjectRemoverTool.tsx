@@ -14,6 +14,7 @@ import { MODEL_BYTES, inpaintModelUrl, inpaintRegion } from '@/lib/ai/inpaint';
 import { isModelCached } from '@/lib/ai/runtime';
 
 import { ModelNotice, ModelProgress } from './ModelNotice';
+import { Slider } from '@/components/ui/Slider';
 
 const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/avif'];
 
@@ -302,19 +303,17 @@ export default function ObjectRemoverTool() {
                 ))}
               </div>
 
-              <label className="flex items-center gap-2 text-sm">
-                Size
-                <input
-                  type="range"
-                  min={8}
-                  max={160}
-                  step={2}
-                  value={brush}
-                  onChange={(event) => setBrush(Number(event.target.value))}
-                  className="w-28 accent-accent"
-                />
-                <span className="tabular-nums text-muted">{brush}px</span>
-              </label>
+              <Slider
+                className="w-48"
+                label="Size"
+                value={brush}
+                min={8}
+                max={160}
+                step={2}
+                suffix="px"
+                onInput={(value) => setBrush(value as number)}
+                onChange={(value) => setBrush(value as number)}
+              />
 
               <Button size="sm" variant="secondary" onClick={clearMask} disabled={!hasMask}>
                 Clear mask

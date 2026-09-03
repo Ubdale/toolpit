@@ -5,7 +5,9 @@ import { useCallback, useState } from 'react';
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
 import { Button } from '@/components/ui/Button';
 import { Dropzone } from '@/components/ui/Dropzone';
-import { ErrorMessage, Field, RangeInput, Select, TextInput } from '@/components/ui/Field';
+import { Dropdown } from '@/components/ui/Dropdown';
+import { ErrorMessage, Field, TextInput } from '@/components/ui/Field';
+import { Slider } from '@/components/ui/Slider';
 import { ResultPanel } from '@/components/ui/ResultPanel';
 import { parsePageRanges, stripExtension } from '@/lib/format';
 import { toPdfBlob } from '@/lib/pdf/operations';
@@ -116,37 +118,23 @@ export default function PageNumbersTool() {
       <ToolSurface className="flex flex-col gap-5">
         <ToolSectionHeading>Numbering</ToolSectionHeading>
 
-        <Field label="Format">
-          {({ id }) => (
-            <Select
-              id={id}
-              value={options.format}
-              onChange={(event) => update('format', event.target.value as NumberFormat)}
-            >
-              {numberFormats.map((format) => (
-                <option key={format.value} value={format.value}>
-                  {format.label} — {format.example}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
+        <Dropdown
+          label="Format"
+          value={options.format}
+          onChange={(value) => value && update('format', value as NumberFormat)}
+          options={numberFormats.map((format) => ({
+            value: format.value,
+            label: format.label,
+            description: format.example,
+          }))}
+        />
 
-        <Field label="Position">
-          {({ id }) => (
-            <Select
-              id={id}
-              value={options.position}
-              onChange={(event) => update('position', event.target.value as Corner)}
-            >
-              {corners.map((corner) => (
-                <option key={corner.value} value={corner.value}>
-                  {corner.label}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
+        <Dropdown
+          label="Position"
+          value={options.position}
+          onChange={(value) => value && update('position', value as Corner)}
+          options={corners.map((corner) => ({ value: corner.value, label: corner.label }))}
+        />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Start at" hint="The number printed on the first numbered page.">
@@ -190,31 +178,29 @@ export default function PageNumbersTool() {
           )}
         </Field>
 
-        <Field label={`Text size — ${options.fontSize}pt`}>
-          {({ id }) => (
-            <RangeInput
-              id={id}
-              min={6}
-              max={20}
-              step={1}
-              value={options.fontSize}
-              onChange={(event) => update('fontSize', Number(event.target.value))}
-            />
-          )}
-        </Field>
+        <Slider
+          label="Text size"
+          value={options.fontSize}
+          min={6}
+          max={20}
+          step={1}
+          suffix="pt"
+          editable
+          onInput={(value) => update('fontSize', value as number)}
+          onChange={(value) => update('fontSize', value as number)}
+        />
 
-        <Field label={`Margin — ${options.margin}pt from the edge`}>
-          {({ id }) => (
-            <RangeInput
-              id={id}
-              min={12}
-              max={72}
-              step={2}
-              value={options.margin}
-              onChange={(event) => update('margin', Number(event.target.value))}
-            />
-          )}
-        </Field>
+        <Slider
+          label="Margin from the edge"
+          value={options.margin}
+          min={12}
+          max={72}
+          step={2}
+          suffix="pt"
+          editable
+          onInput={(value) => update('margin', value as number)}
+          onChange={(value) => update('margin', value as number)}
+        />
 
         <Field label="Colour">
           {({ id }) => (

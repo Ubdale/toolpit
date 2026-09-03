@@ -4,8 +4,9 @@ import { useCallback, useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { Dropzone } from '@/components/ui/Dropzone';
-import { ErrorMessage, Field, RadioCards, RangeInput, Select, TextInput } from '@/components/ui/Field';
+import { ErrorMessage, Field, RadioCards, RangeInput, TextInput } from '@/components/ui/Field';
 import { ResultPanel } from '@/components/ui/ResultPanel';
 import { stripExtension } from '@/lib/format';
 import { toPdfBlob } from '@/lib/pdf/operations';
@@ -258,18 +259,19 @@ export default function WatermarkTool() {
                   onChange={(event) => update('color', event.target.value)}
                   className="h-11 w-16 cursor-pointer rounded-xl border border-line bg-surface p-1"
                 />
-                <Select
-                  aria-label="Common watermark colours"
-                  value=""
-                  onChange={(event) => event.target.value && update('color', event.target.value)}
-                >
-                  <option value="">Pick a preset…</option>
-                  <option value="#d1541f">Ember</option>
-                  <option value="#b4291f">Red</option>
-                  <option value="#6a6355">Grey</option>
-                  <option value="#191712">Black</option>
-                  <option value="#2a78d6">Blue</option>
-                </Select>
+                <Dropdown
+                  className="flex-1"
+                  placeholder="Pick a preset…"
+                  value={null}
+                  onChange={(value) => value && update('color', value)}
+                  options={[
+                    { value: '#d1541f', label: 'Ember', icon: <Swatch color="#d1541f" /> },
+                    { value: '#b4291f', label: 'Red', icon: <Swatch color="#b4291f" /> },
+                    { value: '#6a6355', label: 'Grey', icon: <Swatch color="#6a6355" /> },
+                    { value: '#191712', label: 'Black', icon: <Swatch color="#191712" /> },
+                    { value: '#2a78d6', label: 'Blue', icon: <Swatch color="#2a78d6" /> },
+                  ]}
+                />
               </div>
             )}
           </Field>
@@ -294,5 +296,16 @@ export default function WatermarkTool() {
         </Button>
       </ToolSurface>
     </div>
+  );
+}
+
+/** The colour chip beside a preset name in the dropdown. */
+function Swatch({ color }: { color: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="block size-3.5 rounded-full border border-line"
+      style={{ background: color }}
+    />
   );
 }

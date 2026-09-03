@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
 import { Button } from '@/components/ui/Button';
-import { ErrorMessage, Field, RangeInput, Select, TextInput } from '@/components/ui/Field';
+import { Dropdown } from '@/components/ui/Dropdown';
+import { ErrorMessage, Field, RangeInput, TextInput } from '@/components/ui/Field';
 import { downloadBlob } from '@/lib/download';
 import { layoutResume, type LayoutResult } from '@/lib/resume/layout';
 import { resumeToPdf, resumeToText } from '@/lib/resume/pdf';
@@ -144,18 +145,15 @@ export default function ResumeTool() {
           </ul>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Page size">
-              {({ id }) => (
-                <Select
-                  id={id}
-                  value={pageSize}
-                  onChange={(event) => setPageSize(event.target.value as PageSize)}
-                >
-                  <option value="a4">A4 — most of the world</option>
-                  <option value="letter">US Letter — North America</option>
-                </Select>
-              )}
-            </Field>
+            <Dropdown
+              label="Page size"
+              value={pageSize}
+              onChange={(value) => value && setPageSize(value as PageSize)}
+              options={[
+                { value: 'a4', label: 'A4', description: 'Most of the world' },
+                { value: 'letter', label: 'US Letter', description: 'North America' },
+              ]}
+            />
 
             <Field
               label={`Text size — ${Math.round(scale * 100)}%`}

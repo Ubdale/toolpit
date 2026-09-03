@@ -10,8 +10,9 @@ import {
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { Dropzone } from '@/components/ui/Dropzone';
-import { ErrorMessage, Field, RangeInput, Select } from '@/components/ui/Field';
+import { ErrorMessage, Field, RangeInput } from '@/components/ui/Field';
 import { ResultPanel } from '@/components/ui/ResultPanel';
 import { stripExtension } from '@/lib/format';
 import {
@@ -801,21 +802,18 @@ export default function EditTool() {
               )}
             </Field>
 
-            <Field label="Typeface">
-              {({ id }) => (
-                <Select
-                  id={id}
-                  value={selected.family}
-                  onChange={(event) =>
-                    patchSelected({ family: event.target.value as 'sans' | 'serif' | 'mono' })
-                  }
-                >
-                  <option value="sans">Sans — Helvetica</option>
-                  <option value="serif">Serif — Times</option>
-                  <option value="mono">Monospace — Courier</option>
-                </Select>
-              )}
-            </Field>
+            <Dropdown
+              label="Typeface"
+              value={selected.family}
+              onChange={(value) =>
+                value && patchSelected({ family: value as 'sans' | 'serif' | 'mono' })
+              }
+              options={[
+                { value: 'sans', label: 'Sans', description: 'Helvetica' },
+                { value: 'serif', label: 'Serif', description: 'Times' },
+                { value: 'mono', label: 'Monospace', description: 'Courier' },
+              ]}
+            />
 
             <div className="flex gap-2">
               <ToolButton

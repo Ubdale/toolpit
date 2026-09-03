@@ -4,8 +4,9 @@ import { useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { Dropzone } from '@/components/ui/Dropzone';
-import { ErrorMessage, Field, RadioCards, RangeInput, Select, TextInput } from '@/components/ui/Field';
+import { ErrorMessage, Field, RadioCards, RangeInput, TextInput } from '@/components/ui/Field';
 import { FileList } from '@/components/ui/FileList';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { stripExtension } from '@/lib/format';
@@ -226,17 +227,16 @@ export default function ResizeTool() {
         {target === 'both' ? (
           <Field label="When the ratio does not match">
             {({ id }) => (
-              <Select
+              <Dropdown
                 id={id}
                 value={fit}
-                onChange={(event) => setFit(event.target.value as FitMode)}
-              >
-                {fitModes.map((mode) => (
-                  <option key={mode.value} value={mode.value}>
-                    {mode.label} — {mode.description}
-                  </option>
-                ))}
-              </Select>
+                onChange={(value) => value && setFit(value as FitMode)}
+                options={fitModes.map((mode) => ({
+                  value: mode.value,
+                  label: mode.label,
+                  description: mode.description,
+                }))}
+              />
             )}
           </Field>
         ) : null}
@@ -257,22 +257,15 @@ export default function ResizeTool() {
         </label>
 
         <div className="border-t border-line pt-4">
-          <Field label="Output format">
-            {({ id }) => (
-              <Select
-                id={id}
-                value={format}
-                onChange={(event) => setFormat(event.target.value as ImageFormat | 'keep')}
-              >
-                <option value="keep">Keep each file&rsquo;s format</option>
-                {imageFormats.map((entry) => (
-                  <option key={entry.value} value={entry.value}>
-                    {entry.label}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
+          <Dropdown
+            label="Output format"
+            value={format}
+            onChange={(value) => value && setFormat(value as ImageFormat | 'keep')}
+            options={[
+              { value: 'keep', label: 'Keep each file’s format' },
+              ...imageFormats.map((entry) => ({ value: entry.value, label: entry.label })),
+            ]}
+          />
         </div>
 
         {format !== 'image/png' ? (
