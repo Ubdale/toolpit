@@ -22,12 +22,19 @@ import {
   type AnnotationKind,
 } from '@/lib/pdf/annotate';
 import { findAt, translate } from '@/lib/pdf/hit';
+import {
+  applyTextEdits,
+  extractPageText,
+  type TextEdit,
+  type TextRun,
+} from '@/lib/pdf/text-edit';
 import { renderPages, toPdfBlob } from '@/lib/pdf/operations';
 
 import { EditorCanvas } from './EditorCanvas';
+import { TextLayer } from './TextLayer';
 import { usePdfFiles } from './usePdfFiles';
 
-type Tool = AnnotationKind | 'select';
+type Tool = AnnotationKind | 'select' | 'edit-text';
 
 type Draft =
   | { kind: 'none' }
@@ -58,8 +65,21 @@ export default function EditTool() {
   const [page, setPage] = useState<{ url: string; width: number; height: number } | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
 
+  // The document's own text: extracted per page and cached, because a page of
+  // dense text is a few hundred runs and re-walking the content stream on every
+  // render would be wasteful.
+  const [textPages, setTextPages] = useState<Map<number, TextRun[]>>(new Map());
+  const [textEdits, setTextEdits] = useState<Map<string, string>>(new Map());
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const [isReadingText, setIsReadingText] = useState(false);
+
   const [isSaving, setIsSaving] = useState(false);
-  const [result, setResult] = useState<{ blob: Blob; substitutions: number } | null>(null);
+  const [result, setResult] = useState<{
+    blob: Blob;
+    substitutions: number;
+    replaced: number;
+    overflowing: number;
+  } | null>(null);
 
   const surfaceRef = useRef<HTMLDivElement>(null);
   const draftRef = useRef<Draft>({ kind: 'none' });
@@ -106,6 +126,46 @@ export default function EditTool() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
+
+  // Extraction is deferred until the text tool is actually chosen: most edits
+  // are a signature or a highlight, and walking every content stream up front
+  // would make the editor slow to open for no reason.
+  useEffect(() => {
+    if (tool !== 'edit-text' || !file || textPages.has(pageIndex)) return;
+
+    let cancelled = false;
+    setIsReadingText(true);
+
+    extractPageText(file.bytes, pageIndex)
+      .then((page) => {
+        if (cancelled) return;
+        setTextPages((current) => new Map(current).set(pageIndex, page.runs));
+      })
+      .catch((cause: unknown) => {
+        if (!cancelled) {
+          setError(cause instanceof Error ? cause.message : 'Could not read this page’s text.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsReadingText(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tool, file, pageIndex, textPages, setError]);
+
+  const pageRuns = textPages.get(pageIndex) ?? [];
+  const selectedRun = pageRuns.find((run) => run.id === selectedRunId) ?? null;
+
+  // How many runs across the whole document now read differently.
+  let changedRunCount = 0;
+  for (const runs of textPages.values()) {
+    for (const run of runs) {
+      const replacement = textEdits.get(run.id);
+      if (replacement !== undefined && replacement !== run.text) changedRunCount += 1;
+    }
+  }
 
   /** Every mutation goes through here, so undo is complete by construction. */
   const commit = useCallback((next: Annotation[] | ((current: Annotation[]) => Annotation[])) => {
@@ -434,8 +494,37 @@ export default function EditTool() {
     setError(null);
     setIsSaving(true);
     try {
-      const { bytes, substitutions } = await applyAnnotations(file.bytes, annotations);
-      setResult({ blob: toPdfBlob(bytes), substitutions });
+      // Text replacements rewrite the content stream, so they go first; the
+      // overlay marks are then drawn on top of the corrected page.
+      const pending: TextEdit[] = [];
+      const allRuns: TextRun[] = [];
+
+      for (const runs of textPages.values()) {
+        allRuns.push(...runs);
+        for (const run of runs) {
+          const replacement = textEdits.get(run.id);
+          if (replacement !== undefined && replacement !== run.text) {
+            pending.push({ runId: run.id, text: replacement });
+          }
+        }
+      }
+
+      let working = file.bytes;
+      let overflowing = 0;
+
+      if (pending.length > 0) {
+        const edited = await applyTextEdits(working, allRuns, pending);
+        working = edited.bytes;
+        overflowing = edited.overflowing.length;
+      }
+
+      const { bytes, substitutions } = await applyAnnotations(working, annotations);
+      setResult({
+        blob: toPdfBlob(bytes),
+        substitutions,
+        replaced: pending.length,
+        overflowing,
+      });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not save the edited PDF.');
     } finally {
@@ -463,6 +552,19 @@ export default function EditTool() {
         target={{ blob: result.blob, filename }}
         onReset={reset}
       >
+        {result.replaced > 0 ? (
+          <p className="text-sm text-muted">
+            The original glyphs were deleted from the file and yours drawn in their place, so the
+            text is still real text — selectable, searchable and copyable.
+          </p>
+        ) : null}
+        {result.overflowing > 0 ? (
+          <p className="text-sm text-muted">
+            {result.overflowing} replacement{result.overflowing === 1 ? ' is' : 's are'} wider than
+            the text it replaced. A PDF cannot reflow, so check those lines have not run into
+            anything beside them.
+          </p>
+        ) : null}
         {result.substitutions > 0 ? (
           <p className="text-sm text-muted">
             {result.substitutions} character{result.substitutions === 1 ? '' : 's'} had to be
@@ -498,6 +600,12 @@ export default function EditTool() {
           <ToolButton active={tool === 'select'} onClick={() => setTool('select')}>
             Select
           </ToolButton>
+          {/* Set apart from the rest: this one changes the document's own text,
+              where everything after it draws on top of the page. */}
+          <ToolButton active={tool === 'edit-text'} onClick={() => setTool('edit-text')}>
+            Edit text
+          </ToolButton>
+          <span aria-hidden="true" className="mx-1 h-5 w-px bg-line" />
           {annotationTools.map((entry) => (
             <ToolButton
               key={entry.kind}
@@ -519,7 +627,14 @@ export default function EditTool() {
         </div>
 
         <p className="text-xs text-muted">
-          {activeTool?.hint ?? 'Click a mark to select it, then drag to move or edit it on the right.'}
+          {tool === 'edit-text'
+            ? isReadingText
+              ? 'Reading this page’s text…'
+              : pageRuns.length > 0
+                ? `Click any line to rewrite it. ${pageRuns.length} editable text ${pageRuns.length === 1 ? 'run' : 'runs'} on this page.`
+                : 'No editable text on this page — it is an image or a scan, so there are no glyphs to replace.'
+            : (activeTool?.hint ??
+              'Click a mark to select it, then drag to move or edit it on the right.')}
         </p>
 
         <div className="flex items-center justify-between gap-3 border-y border-line py-2">
@@ -548,7 +663,7 @@ export default function EditTool() {
         </div>
 
         <div className="max-h-[42rem] overflow-auto rounded-xl bg-sunken p-4">
-          <div ref={surfaceRef} className="mx-auto w-fit">
+          <div ref={surfaceRef} className="relative mx-auto w-fit">
             <EditorCanvas
               pageUrl={page?.url ?? null}
               pageWidth={page?.width ?? 595}
@@ -562,6 +677,16 @@ export default function EditTool() {
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
             />
+
+            {tool === 'edit-text' ? (
+              <TextLayer
+                runs={pageRuns}
+                edits={textEdits}
+                selectedId={selectedRunId}
+                zoom={zoom}
+                onSelect={setSelectedRunId}
+              />
+            ) : null}
           </div>
         </div>
 
@@ -580,9 +705,88 @@ export default function EditTool() {
       </ToolSurface>
 
       <ToolSurface className="flex flex-col gap-5">
-        <ToolSectionHeading>{selected ? 'Selected mark' : 'Defaults'}</ToolSectionHeading>
+        <ToolSectionHeading>
+          {tool === 'edit-text'
+            ? selectedRun
+              ? 'Rewrite this line'
+              : 'Edit the page’s text'
+            : selected
+              ? 'Selected mark'
+              : 'Defaults'}
+        </ToolSectionHeading>
 
-        {selected?.kind === 'text' ? (
+        {tool === 'edit-text' ? (
+          selectedRun ? (
+            <>
+              <Field
+                label="Text"
+                hint={`${Math.round(selectedRun.fontSize)}pt ${selectedRun.family}${
+                  selectedRun.bold ? ' bold' : ''
+                }${selectedRun.italic ? ' italic' : ''}`}
+              >
+                {({ id }) => (
+                  <textarea
+                    id={id}
+                    rows={3}
+                    autoFocus
+                    value={textEdits.get(selectedRun.id) ?? selectedRun.text}
+                    onChange={(event) =>
+                      setTextEdits((current) =>
+                        new Map(current).set(selectedRun.id, event.target.value),
+                      )
+                    }
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm transition-colors hover:border-line-strong focus:border-accent"
+                  />
+                )}
+              </Field>
+
+              <p className="rounded-xl border border-line bg-sunken px-3 py-2.5 text-xs text-muted">
+                Was: “{selectedRun.text}”
+              </p>
+
+              {(textEdits.get(selectedRun.id) ?? selectedRun.text).length >
+              selectedRun.text.length ? (
+                <p className="text-xs text-muted">
+                  This is longer than the original. A PDF has no reflow, so the extra width runs
+                  into whatever sits to the right of it rather than pushing it along.
+                </p>
+              ) : null}
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() =>
+                    setTextEdits((current) => {
+                      const next = new Map(current);
+                      next.delete(selectedRun.id);
+                      return next;
+                    })
+                  }
+                >
+                  Revert this line
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() =>
+                    setTextEdits((current) => new Map(current).set(selectedRun.id, ''))
+                  }
+                >
+                  Delete the text
+                </Button>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-muted">
+              Click a line on the page to rewrite it. The original glyphs are deleted from the file
+              and yours are drawn in their place, at the same position, size and colour — the text
+              stays real text, not a picture patched over the old one.
+            </p>
+          )
+        ) : null}
+
+        {tool !== 'edit-text' && selected?.kind === 'text' ? (
           <>
             <Field label="Text">
               {({ id }) => (
@@ -642,7 +846,7 @@ export default function EditTool() {
           </>
         ) : null}
 
-        {selected && selected.kind !== 'text' && selected.kind !== 'image' ? (
+        {tool !== 'edit-text' && selected && selected.kind !== 'text' && selected.kind !== 'image' ? (
           <>
             {'strokeWidth' in selected ? (
               <Field label={`Thickness — ${selected.strokeWidth}pt`}>
@@ -703,7 +907,7 @@ export default function EditTool() {
           </>
         ) : null}
 
-        {selected?.kind === 'image' ? (
+        {tool !== 'edit-text' && selected?.kind === 'image' ? (
           <>
             <Field label={`Width — ${Math.round(selected.width)}pt`}>
               {({ id }) => (
@@ -736,7 +940,7 @@ export default function EditTool() {
           </>
         ) : null}
 
-        {(!selected || selected.kind !== 'image') && (
+        {tool !== 'edit-text' && (!selected || selected.kind !== 'image') && (
           <Field label="Colour">
             {({ id }) => (
               <div className="flex flex-col gap-2">
@@ -770,7 +974,7 @@ export default function EditTool() {
           </Field>
         )}
 
-        {!selected ? (
+        {tool !== 'edit-text' && !selected ? (
           <>
             <Field label={`Line thickness — ${strokeWidth}pt`}>
               {({ id }) => (
@@ -828,7 +1032,11 @@ export default function EditTool() {
           {onPage.length} on this page
         </div>
 
-        <Button onClick={save} disabled={isSaving || annotations.length === 0} size="lg">
+        <Button
+          onClick={save}
+          disabled={isSaving || (annotations.length === 0 && changedRunCount === 0)}
+          size="lg"
+        >
           {isSaving ? 'Saving…' : 'Save the edited PDF'}
         </Button>
         <Button variant="ghost" onClick={reset}>

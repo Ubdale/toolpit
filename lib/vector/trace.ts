@@ -101,7 +101,7 @@ export const defaultTraceSettings: TraceSettings = {
   layerDifference: 16,
   cornerThreshold: 60,
   lengthThreshold: 4,
-  pathPrecision: 6,
+  pathPrecision: 2,
 };
 
 /** Presets covering what people actually trace. */
@@ -291,7 +291,30 @@ function describeTraceFailure(cause: unknown): string {
  * Tracing cost grows with pixel count, and beyond a couple of megapixels the
  * extra detail mostly becomes node count rather than visible quality.
  */
-export async function canvasFromFile(file: File, maxEdge: number): Promise<HTMLCanvasElement> {
+export type PreparedCanvas = {
+  canvas: HTMLCanvasElement;
+  /** What was done to the image before tracing, for telling the visitor. */
+  matted: boolean;
+};
+
+/**
+ * Turns a file into the canvas the tracer reads.
+ *
+ * **Transparency gets a white ground.** A canvas is transparent *black* where
+ * nothing has been drawn, so a logo on a transparent background was previously
+ * traced with every see-through pixel read as black — a solid black field
+ * behind the artwork. Compositing onto white first is what a person expects.
+ *
+ * **Small images are deliberately not enlarged first.** That looks like it
+ * should help — a 180px logo has a staircase boundary, so give the tracer a
+ * smooth one — but measured against a real two-colour logo it made the result
+ * dramatically worse: interpolating up invents a band of intermediate colours
+ * along every edge, and the clusterer merges the whole image into one washed-out
+ * blob. VTracer fits splines to the boundary itself, which *is* the smoothing
+ * step; it wants the original pixels, not a guess at what was between them.
+ * Genuinely having a larger source still helps. Inventing one does not.
+ */
+export async function canvasFromFile(file: File, maxEdge: number): Promise<PreparedCanvas> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
 
@@ -301,8 +324,36 @@ export async function canvasFromFile(file: File, maxEdge: number): Promise<HTMLC
 
   const context = canvas.getContext('2d', { willReadFrequently: true });
   if (!context) throw new Error('This browser could not open a 2D canvas.');
+
+  const matted = await hasTransparency(file, bitmap);
+  if (matted) {
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
   context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
 
-  return canvas;
+  return { canvas, matted };
+}
+
+/** Whether the source actually uses its alpha channel, sampled cheaply. */
+async function hasTransparency(file: File, bitmap: ImageBitmap): Promise<boolean> {
+  // Formats without an alpha channel cannot be transparent, so skip the read.
+  if (/^image\/(jpeg|bmp)$/.test(file.type)) return false;
+
+  const probe = document.createElement('canvas');
+  const size = 64;
+  probe.width = Math.min(size, bitmap.width);
+  probe.height = Math.min(size, bitmap.height);
+
+  const context = probe.getContext('2d', { willReadFrequently: true });
+  if (!context) return false;
+  context.drawImage(bitmap, 0, 0, probe.width, probe.height);
+
+  const { data } = context.getImageData(0, 0, probe.width, probe.height);
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i]! < 250) return true;
+  }
+  return false;
 }

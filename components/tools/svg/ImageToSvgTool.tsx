@@ -11,7 +11,7 @@ import { ErrorMessage, Field, RangeInput } from '@/components/ui/Field';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { downloadBlob } from '@/lib/download';
 import { formatBytes, stripExtension } from '@/lib/format';
-import { byteLength } from '@/lib/svg/optimize';
+import { byteLength, defaultOptimizeSettings, optimizeSvg } from '@/lib/svg/optimize';
 import { VECTOR_FORMATS, exportVector, parseSvg, type VectorFormat } from '@/lib/vector/export';
 import {
   MAX_COLOR_PRECISION,
@@ -36,6 +36,7 @@ export default function ImageToSvgTool() {
   const [format, setFormat] = useState<VectorFormat>('svg');
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [prep, setPrep] = useState<{ matted: boolean; savedBytes: number } | null>(null);
   const [skipped, setSkipped] = useState(0);
 
   const urlsRef = useRef<string[]>([]);
@@ -82,13 +83,28 @@ export default function ImageToSvgTool() {
     setProgress(0);
 
     try {
-      const canvas = await canvasFromFile(file, MAX_EDGE);
-      const traced = await traceImage(canvas, settings, setProgress);
-      setResult(traced);
+      const prepared = await canvasFromFile(file, MAX_EDGE);
+      const traced = await traceImage(prepared.canvas, settings, setProgress);
+
+      // The tracer emits one <path> per colour region with no cleanup of its
+      // own. Running the optimiser the site already ships typically removes a
+      // third of the bytes without touching a single coordinate that matters.
+      const cleaned = await optimizeSvg(traced.svg, {
+        ...defaultOptimizeSettings,
+        precision: settings.pathPrecision,
+        multipass: true,
+      });
+
+      const output = { ...traced, svg: cleaned.svg };
+      setResult(output);
+      setPrep({
+        matted: prepared.matted,
+        savedBytes: cleaned.originalBytes - cleaned.optimizedBytes,
+      });
       setResultUrl(
-        track(URL.createObjectURL(new Blob([traced.svg], { type: 'image/svg+xml' }))),
+        track(URL.createObjectURL(new Blob([output.svg], { type: 'image/svg+xml' }))),
       );
-      setSkipped(parseSvg(traced.svg).skipped);
+      setSkipped(parseSvg(output.svg).skipped);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not trace this image.');
     } finally {
@@ -310,6 +326,17 @@ export default function ImageToSvgTool() {
               <CopyButton text={result.svg} label="Copy SVG" />
             </div>
           </div>
+
+          {prep && (prep.matted || prep.savedBytes > 0) ? (
+            <ul className="mt-3 flex flex-col gap-1 text-xs text-muted">
+              {prep.matted ? (
+                <li>Transparent areas were placed on white before tracing.</li>
+              ) : null}
+              {prep.savedBytes > 0 ? (
+                <li>Optimiser removed {formatBytes(prep.savedBytes)} of redundant path data.</li>
+              ) : null}
+            </ul>
+          ) : null}
 
           {skipped > 0 ? (
             <p className="mt-3 text-xs text-muted">

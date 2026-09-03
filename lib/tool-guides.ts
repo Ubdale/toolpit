@@ -223,7 +223,17 @@ export const guides: Record<string, ToolGuide> = {
       {
         question: 'Can I edit the text that is already in the PDF?',
         answer:
-          'Not directly, and no honest browser tool can. Existing text is drawn as positioned glyphs with embedded fonts, so "editing" it means re-flowing a layout that does not exist. What you can do here is cover the old text with a filled white box and type new text over it — which is what most PDF editors are really doing when they appear to edit a line.',
+          'Yes. Choose “Edit text” and the tool reads the page’s own text, boxes every line it finds, and lets you rewrite any of them. The original glyphs are deleted from the file and yours are drawn in their place at the same position, size, colour and typeface — so the result is still real, selectable, searchable text rather than a picture patched over the old words.',
+      },
+      {
+        question: 'Why can’t I make a paragraph re-wrap after editing it?',
+        answer:
+          'Because a PDF has no paragraphs. Text is stored as instructions — "set this font, move the pen here, draw these glyphs" — with no record of which lines belong together, so there is nothing to re-flow. Replacing a line is exact; a longer replacement simply occupies more width, and the tool warns you when that happens so you can check it has not run into anything. No PDF editor can reflow arbitrary text, and the ones that appear to are re-typesetting the page from a guess about its structure.',
+      },
+      {
+        question: 'Nothing is highlighted when I choose “Edit text”. Why?',
+        answer:
+          'The page has no text layer — it is a scan or an exported image, so there are no glyphs to replace, only pixels. Use a box filled white to cover it and the Text tool to type over the top.',
       },
       {
         question: 'Will my marks be editable later, or are they permanent?',
