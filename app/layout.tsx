@@ -3,6 +3,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 
+import { AdSenseScript } from '@/components/layout/AdSenseScript';
 import { Footer } from '@/components/layout/Footer';
 import { Header } from '@/components/layout/Header';
 import { themeInitScript } from '@/components/layout/ThemeToggle';
@@ -105,6 +106,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             unmentioned. */}
         <Analytics />
         <SpeedInsights />
+        {/* Ads pay for the site and load on every page, which is why /privacy
+            states that unconditionally rather than hedging with "if ads are
+            shown". Renders nothing until a publisher ID is configured. */}
+        <AdSenseScript />
       </body>
     </html>
   );

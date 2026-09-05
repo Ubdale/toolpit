@@ -143,5 +143,15 @@ export function organizationJsonLd() {
     description: site.oneLiner,
     logo: absoluteUrl('/icon-512.png'),
     slogan: site.tagline,
+    // A machine-readable contact route, matching what /contact and /about show
+    // a person. Reviewers check that the two agree.
+    email: site.contactEmail,
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      email: site.contactEmail,
+      url: absoluteUrl('/contact'),
+      availableLanguage: 'English',
+    },
   };
 }

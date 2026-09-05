@@ -75,10 +75,11 @@ export default function HowItWorksPage() {
           <h2 className="text-heading">How you can check</h2>
           <p className="mt-3 text-muted">
             You do not have to take our word for it. Open your browser&rsquo;s developer tools,
-            switch to the Network tab, and use any tool on Toolpit. You will see the page and its
-            scripts download — and then nothing else. No request carries your file, because there
-            is no endpoint to carry it to. You can even disconnect from the network entirely after
-            the page loads: every tool keeps working.
+            switch to the Network tab, and use any tool on Toolpit. You will see the page load,
+            its scripts download, and the ads that pay for the site fetch themselves. What you
+            will not see is a request carrying your file, because there is no endpoint to carry it
+            to. Block the ads and disconnect from the network entirely after the page loads: every
+            tool keeps working.
           </p>
 
           <h2 className="mt-10 text-heading">What about big files?</h2>

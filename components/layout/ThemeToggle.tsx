@@ -8,8 +8,9 @@ type Theme = 'light' | 'dark';
 const STORAGE_KEY = 'toolpit-theme';
 
 /**
- * The one thing Toolpit stores in the browser is which theme you picked — no
- * cookies, no analytics, and never a byte of a file you opened.
+ * Stores which theme you picked, and nothing else. Other parts of the site keep
+ * their own local state (resume drafts, saved templates) and the ad script sets
+ * its own cookies — all of it catalogued on /privacy. Never a byte of a file.
  */
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme | null>(null);

@@ -32,10 +32,28 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
     {
+      url: absoluteUrl('/about'),
+      lastModified,
+      changeFrequency: 'yearly' as const,
+      priority: 0.5,
+    },
+    {
+      url: absoluteUrl('/contact'),
+      lastModified,
+      changeFrequency: 'yearly' as const,
+      priority: 0.5,
+    },
+    {
       url: absoluteUrl('/privacy'),
       lastModified,
       changeFrequency: 'yearly' as const,
       priority: 0.4,
+    },
+    {
+      url: absoluteUrl('/terms'),
+      lastModified,
+      changeFrequency: 'yearly' as const,
+      priority: 0.3,
     },
   ];
 }

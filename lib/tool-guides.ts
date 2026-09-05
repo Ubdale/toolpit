@@ -21,7 +21,7 @@ export type ToolGuide = {
 };
 
 const PRIVACY_ANSWER =
-  'No. There is no upload step and no server that could receive the file — the tool runs as code in this browser tab, works on the copy your browser opened, and forgets it when you close the tab. You can check this yourself: open your browser’s network panel, run the tool, and watch that nothing is sent.';
+  'No. There is no upload step and no server that could receive the file — the tool runs as code in this browser tab, works on the copy your browser opened, and forgets it when you close the tab. You can check this yourself: open your browser’s network panel and run the tool. You will see the page, its scripts and the ads that pay for the site — and no request carrying your file, because there is no endpoint to carry it to.';
 
 const WATERMARK_ANSWER =
   'Never. There is no watermark, no page limit, no daily cap and no paid tier that unlocks the real output. Toolpit costs nothing to run per file, because your device does the work.';
@@ -720,7 +720,7 @@ export const guides: Record<string, ToolGuide> = {
       {
         question: 'Does anyone see who scans it?',
         answer:
-          'Nobody, including us. There is no redirect and no analytics, because the code points straight at your content. That is the flip side of the answer above: no tracking also means no scan statistics.',
+          'Nobody, including us. The code encodes your content directly rather than pointing at a redirect we control, so there is nothing in the scan path to count. That is the flip side of the answer above: no middleman also means no scan statistics for you either.',
       },
       {
         question: 'Which error correction level should I choose?',
