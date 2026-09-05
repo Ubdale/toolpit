@@ -54,7 +54,7 @@ components/
 lib/
   tools.ts              THE registry — every tool's copy, metadata and links
   pdf/                  pdf-lib + pdf.js operations, lazily loaded
-  svg/                  svgo + image tracer, lazily loaded
+  svg/                  svgo, lazily loaded
   ai/                   model loading, caching and MI-GAN inference
   record/               capture, annotation compositing and trimming
   seo.ts  jsonld.ts     per-page metadata and structured data
@@ -104,7 +104,7 @@ All twenty-six tools are live.
 | PDF | Merge, split, reorder/rotate, compress, images→PDF, PDF→images | `pdf-lib` + `pdfjs-dist` |
 | PDF authoring | Editor (text, shapes, highlight, freehand/signature, images), watermark, page numbers, structural watermark removal | `pdf-lib` + own content-stream lexer |
 | Spreadsheets | Excel→PDF and PDF→Excel, style-preserving, both in bulk | ExcelJS + SheetJS + `pdf-lib` / `pdfjs-dist` |
-| Vector | SVG optimizer, image→vector tracer (SVG/PDF/AI/EPS), favicon generator | `svgo`, VTracer wasm, canvas |
+| Vector | SVG optimizer, favicon generator | `svgo`, canvas |
 | Image | Resize, convert (PNG/JPG/WebP/AVIF) and crop, all in bulk | Canvas, with stepped downscaling |
 | AI erase | Watermark removal across a whole set, regions stored proportionally | MI-GAN via `onnxruntime-web` |
 | AI image | Background remover (+ matte refinement and backdrops), upscaler (three model sizes), object removal (crop-to-mask, undo/redo) | `@imgly/background-removal`, UpscalerJS/TF.js, MI-GAN via `onnxruntime-web` |
@@ -166,19 +166,8 @@ Inference runs single-threaded on purpose: multithreading needs
 `SharedArrayBuffer`, which needs cross-origin isolation, which would break the
 cross-origin model fetches.
 
-### Two conversions worth understanding
+### One conversion worth understanding
 
-**Image → vector** runs on VTracer, which clusters colour regions and fits real
-splines, and exports through [`lib/vector/export.ts`](lib/vector/export.ts) to
-SVG, a true vector PDF, an Illustrator-compatible `.ai` (the same PDF bytes —
-Illustrator has opened PDF natively since v9), or EPS. Both writers speak only
-lines and cubics, so [`lib/vector/path.ts`](lib/vector/path.ts) normalises
-relative commands, shorthand curves, quadratics and elliptical arcs first.
-
-Both spreadsheet tools take **any number of files at once**, and either combine
-them into one output or return a ZIP of one per input. That is the shape the
-architecture wants: with no server, batch costs nothing to offer, so there is no
-file cap and no reason to invent one.
 
 **Excel → PDF keeps formatting**, which needs two libraries. SheetJS's community
 build deliberately does not parse cell styles — they are a paid feature — so

@@ -13,7 +13,7 @@
 
 **Hero H1:** Free online tools that never touch a server
 
-**Hero subhead:** Edit PDFs, convert images, trace vectors, and more — all running entirely in your browser. No uploads, no accounts, no watermarks, no limits.
+**Hero subhead:** Edit PDFs, convert images, clean up SVGs, and more — all running entirely in your browser. No uploads, no accounts, no watermarks, no limits.
 
 **Primary CTA:** Browse the tools
 **Secondary CTA:** How it works
@@ -76,12 +76,6 @@ Body: Open a tool, drop in your file, and the work happens on your own machine. 
 ---
 
 ## Phase 2 — Vector / SVG Tools
-
-### PNG/JPG to SVG (Image Tracer)
-- **Title tag:** Convert PNG & JPG to SVG Free — Image to Vector | Toolpit
-- **Meta description:** Trace a PNG or JPG into a scalable SVG vector in your browser. Free, no upload, no watermark — your image never leaves your device.
-- **H1:** Convert an image to SVG
-- **Intro:** Turn a logo, icon, or graphic into a clean, scalable SVG. Toolpit traces your image into vector paths locally in your browser, so you get infinitely resizable artwork without uploading a single pixel.
 
 ### SVG Optimizer
 - **Title tag:** Optimize & Minify SVG Free Online | Toolpit

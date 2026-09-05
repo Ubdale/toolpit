@@ -1,8 +1,7 @@
 // Copies the runtime binaries that have to be served as static assets rather
-// than bundled: the pdf.js worker, the ONNX Runtime WebAssembly build used by
-// the inpainting tool, and the VTracer wasm used by the image tracer. Each is
-// fetched on demand by the tool that needs it, so none of them touch any page's
-// initial load.
+// than bundled: the pdf.js worker, and the ONNX Runtime WebAssembly build used
+// by the inpainting tool. Each is fetched on demand by the tool that needs it,
+// so neither touches any page's initial load.
 import { copyFile, mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
