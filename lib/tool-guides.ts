@@ -679,6 +679,40 @@ export const guides: Record<string, ToolGuide> = {
     ],
   },
 
+  '/create/ats-checker': {
+    steps: [
+      'Drop in your resume as a PDF — the same file you would send an employer.',
+      'Read the report: anything marked as needing a fix is what a parser could not read.',
+      'Optionally paste a job description to see which of its repeated terms your resume is missing.',
+    ],
+    faqs: [
+      {
+        question: 'Is my resume uploaded?',
+        answer: PRIVACY_ANSWER,
+      },
+      {
+        question: 'How is the score calculated?',
+        answer:
+          'It starts at 100 and subtracts for each problem, weighted by how badly that problem breaks a real parse. A PDF with no text layer scores zero outright, because nothing else matters if the document cannot be read at all. Missing contact details, missing section headings and unreadable dates cost the most; phrasing issues cost least. The number is a summary of the findings below it, not a verdict from any particular employer’s system.',
+      },
+      {
+        question: 'Does this tell me what a specific company’s ATS will do?',
+        answer:
+          'No, and be wary of anything that claims to. Employers run different systems, configured differently, and none publishes its rules. What this checks is the layer underneath all of them: whether the text can be extracted, whether the sections and dates are findable, and whether your wording matches the posting. A resume that fails here fails everywhere; one that passes has cleared the part that is actually knowable.',
+      },
+      {
+        question: 'Why does my beautifully designed resume score badly?',
+        answer:
+          'Because a parser never sees the design. It reads the text in the order the PDF stores it, so multi-column layouts interleave, text inside images disappears entirely, icon fonts extract as meaningless symbols, and details tucked into a header can be skipped. The fix is rarely to make it uglier — it is to keep the body single-column and put every fact in real, selectable text.',
+      },
+      {
+        question: 'Should I paste the job description keywords into my resume?',
+        answer:
+          'Only where they are true. The keyword check exists to show you which relevant terms you have described in different words, not to supply a list to paste in. A recruiter reads the same document the software scanned, and stuffing — particularly hidden white text — is both detectable and disqualifying.',
+      },
+    ],
+  },
+
   '/create/qr-code': {
     steps: [
       'Choose what the code should do — a link, Wi-Fi, a contact card or plain text.',

@@ -40,6 +40,7 @@ const TOOL_ICONS: Record<string, IconName> = {
 
   '/create/resume': 'toolResume',
   '/create/chart': 'chartBar',
+  '/create/ats-checker': 'search',
   '/create/qr-code': 'toolQr',
   '/create/chart-builder': 'chartColumn',
   '/create/report-builder': 'toolReport',

@@ -594,6 +594,28 @@ export const tools: Tool[] = [
     related: ['/create/chart-builder', '/pdf/pdf-to-excel', '/pdf/excel-to-pdf', '/create/chart'],
   },
   {
+    href: '/create/ats-checker',
+    category: 'create',
+    status: 'live',
+    name: 'Resume checker',
+    summary: 'See how an ATS reads your CV before a recruiter does.',
+    title: 'Free ATS Resume Checker — Test Your CV in Your Browser | Toolpit',
+    description:
+      'Check whether an applicant tracking system can actually read your resume. Parses the PDF in your browser and reports what it found. Free, no signup, no upload.',
+    h1: 'Check your resume against an ATS',
+    intro:
+      'Most applications are read by software before a person sees them, and it reads the text your PDF contains rather than the page you designed. Drop your resume in and this pulls out the same text a parser would, then reports what it could and could not find: contact details, section headings, dates, quantified achievements, and how well it matches a job description you paste in. Nothing is uploaded.',
+    keywords: [
+      'ats resume checker',
+      'ats checker free',
+      'resume scanner',
+      'cv checker',
+      'applicant tracking system test',
+      'resume keyword match',
+    ],
+    related: ['/create/resume', '/pdf/to-images', '/pdf/edit', '/pdf/compress'],
+  },
+  {
     href: '/create/qr-code',
     category: 'create',
     status: 'live',
