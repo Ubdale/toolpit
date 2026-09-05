@@ -6,7 +6,6 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 import { AdSenseScript } from '@/components/layout/AdSenseScript';
 import { Footer } from '@/components/layout/Footer';
 import { Header } from '@/components/layout/Header';
-import { PrimeProvider } from '@/components/layout/PrimeProvider';
 import { themeInitScript } from '@/components/layout/ThemeToggle';
 import { ToastProvider } from '@/components/ui/Toast';
 import { jsonLdProps, organizationJsonLd } from '@/lib/jsonld';
@@ -106,7 +105,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
-        <PrimeProvider>
         <ToastProvider>
           <Header />
           <main id="main" className="flex-1">
@@ -114,7 +112,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <Footer />
         </ToastProvider>
-        </PrimeProvider>
         {/* Page views and real-user performance timings. Neither can see a file
             you opened, because no file is ever part of a request — but both do
             report something, so both are disclosed on /privacy rather than left

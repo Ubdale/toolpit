@@ -40,12 +40,67 @@ export function TextInput({ className, ...props }: ComponentProps<'input'>) {
   return <input type="text" className={cn(controlClasses, className)} {...props} />;
 }
 
-/**
- * RadioCards moved to ./Choice when the control set was rebuilt on
- * PrimeReact's primitives. Re-exported here so the ten call sites that import
- * it from this module keep working.
- */
-export { RadioCards, type RadioCardsProps, type RadioOption } from './Choice';
+type RadioOption<T extends string> = {
+  value: T;
+  label: string;
+  description?: string;
+};
+
+type RadioCardsProps<T extends string> = {
+  legend: string;
+  value: T;
+  options: RadioOption<T>[];
+  onChange: (value: T) => void;
+  name: string;
+};
+
+/** Segmented choice rendered as real radios, so arrow keys work. */
+export function RadioCards<T extends string>({
+  legend,
+  value,
+  options,
+  onChange,
+  name,
+}: RadioCardsProps<T>) {
+  return (
+    <fieldset className="flex flex-col gap-1.5">
+      <legend className="mb-1.5 text-sm font-medium">{legend}</legend>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {options.map((option) => {
+          const selected = option.value === value;
+          return (
+            <label
+              key={option.value}
+              className={cn(
+                'flex cursor-pointer gap-3 rounded-xl border px-3.5 py-3 transition-colors',
+                'has-focus-visible:outline-2',
+                'has-focus-visible:outline-offset-2 has-focus-visible:outline-accent',
+                selected
+                  ? 'border-accent bg-accent-soft'
+                  : 'border-line bg-surface hover:border-line-strong',
+              )}
+            >
+              <input
+                type="radio"
+                name={name}
+                value={option.value}
+                checked={selected}
+                onChange={() => onChange(option.value)}
+                className="mt-0.5 size-4 shrink-0 accent-accent"
+              />
+              <span>
+                <span className="block text-sm font-medium">{option.label}</span>
+                {option.description ? (
+                  <span className="mt-0.5 block text-xs text-muted">{option.description}</span>
+                ) : null}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
 
 /**
  * Compatibility shim over {@link Slider}.

@@ -7,7 +7,6 @@ import { PreviewPane, TemplateBar, useLivePreview } from '@/components/builder/P
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
 import { Button } from '@/components/ui/Button';
 import { Chart, type ChartSpec as WrapperSpec } from '@/components/ui/Chart';
-import { Toggle } from '@/components/ui/Choice';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { ErrorMessage } from '@/components/ui/Field';
@@ -633,4 +632,25 @@ export default function ChartBuilderTool() {
   );
 }
 
+function Toggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center gap-3 text-sm">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="size-4 accent-accent"
+      />
+      {label}
+    </label>
+  );
+}
 

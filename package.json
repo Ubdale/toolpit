@@ -12,8 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ark-ui/react": "^5.39.1",
     "@imgly/background-removal": "^1.7.0",
-    "@primereact/core": "^11.1.0",
     "@tanstack/react-virtual": "^3.14.10",
     "@tensorflow/tfjs": "^4.22.0",
     "@upscalerjs/esrgan-medium": "^1.0.0",
@@ -27,8 +27,6 @@
     "onnxruntime-web": "1.21.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.2.108",
-    "primeicons": "^8.0.0",
-    "primereact": "^11.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "svgo": "^4.1.0",

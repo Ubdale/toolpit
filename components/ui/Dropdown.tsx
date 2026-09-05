@@ -1,7 +1,7 @@
 'use client';
 
+import { Combobox, createListCollection, Portal } from '@ark-ui/react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Select } from 'primereact/select';
 import { useId, useMemo, useRef, type ReactNode } from 'react';
 
 import { cn } from '@/lib/cn';
@@ -11,14 +11,19 @@ import { Icon } from './Icon';
 /**
  * The one dropdown. Every list-of-choices control in the app is this component.
  *
- * Built on PrimeReact's Select primitive, which ships behaviour without CSS:
- * the combobox ARIA wiring, roving focus, type-ahead, filtering and the
- * floating-element positioning are handled, and every class below is ours.
+ * It is built on Ark UI's headless machines rather than hand-rolled, because
+ * the parts that are easy to get wrong — combobox ARIA wiring, focus
+ * management, type-ahead, and keeping a menu inside the viewport when it opens
+ * near the bottom edge or inside a scroll container — are exactly the parts a
+ * state machine already solves. All the markup and styling below is ours.
  *
- * The public API is unchanged from the version this replaced, so no caller had
- * to be touched. That is deliberate - a component library swap should be
- * invisible above this file, and if it is not, the abstraction was not doing
- * its job.
+ * Every instance is Ark's Combobox machine. The Select machine would suit the
+ * short fixed lists better, but it does not position its menu: its positioner
+ * carries `transform: translate3d(var(--x), var(--y), 0)` while the machine
+ * never defines those variables, so the menu lands at the top-left of the
+ * viewport at content width instead of under its trigger. Combobox sets them
+ * correctly through an otherwise identical portal/positioner/content
+ * structure, and typing in a short list simply filters it.
  */
 
 export type DropdownOption<T extends string = string> = {
@@ -78,10 +83,57 @@ const VIRTUALIZE_ABOVE = 100;
 const ROW_HEIGHT = 40;
 const ROW_HEIGHT_WITH_DESCRIPTION = 56;
 
+export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
+  // Everything routes through the Combobox machine.
+  //
+  // The Select machine does not position its menu: its positioner is rendered
+  // with `transform: translate3d(var(--x), var(--y), 0)` but the machine never
+  // defines --x/--y (nor --reference-width), so the transform is invalid and
+  // the menu lands at the top-left of the viewport at content width instead of
+  // under its trigger. The Combobox machine sets those variables correctly with
+  // an otherwise identical portal/positioner/content structure.
+  //
+  // Typing in a short list simply filters it, which is no worse than the
+  // type-ahead a select would have given.
+  return <ComboboxDropdown {...props} />;
+}
+
+// ------------------------------------------------------------------- shared
+
+function useCollection<T extends string>(options: DropdownOption<T>[]) {
+  return useMemo(
+    () =>
+      createListCollection({
+        items: options,
+        itemToValue: (item) => item.value,
+        itemToString: (item) => item.label,
+        isItemDisabled: (item) => Boolean(item.disabled),
+      }),
+    [options],
+  );
+}
+
+/** Options in declaration order, with group headings inserted. */
+function useGrouped<T extends string>(options: DropdownOption<T>[]) {
+  return useMemo(() => {
+    const rows: ({ kind: 'group'; label: string } | { kind: 'option'; option: DropdownOption<T> })[] =
+      [];
+    let current: string | undefined;
+
+    for (const option of options) {
+      if (option.group && option.group !== current) {
+        rows.push({ kind: 'group', label: option.group });
+        current = option.group;
+      }
+      rows.push({ kind: 'option', option });
+    }
+    return rows;
+  }, [options]);
+}
+
 const controlClasses =
-  'flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-xl border bg-surface px-3 ' +
-  'text-left text-sm transition-colors outline-none ' +
-  'focus-visible:border-accent data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
+  'flex min-h-11 w-full items-center gap-2 rounded-xl border bg-surface px-3 text-left text-sm ' +
+  'transition-colors data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
 
 function controlTone(invalid?: boolean) {
   return invalid
@@ -92,32 +144,29 @@ function controlTone(invalid?: boolean) {
 /**
  * The floating menu.
  *
- * Fades rather than slides. The positioner places this element with a
- * `transform`, so an entrance animation that also drives `transform` competes
- * with the thing deciding where the menu goes - which is exactly how a menu
- * ends up in the corner of the viewport.
+ * The entrance animation is opacity-only, deliberately. The positioning engine
+ * places this element with a `transform`, so an entrance animation that also
+ * animates `transform` — especially with a fill mode that persists the final
+ * keyframe — is competing for the same property as the thing deciding where the
+ * menu goes. Fading in cannot collide with that.
  */
 const menuClasses =
   'z-[80] overflow-hidden rounded-xl border border-line bg-surface shadow-card ' +
-  'motion-safe:transition-opacity motion-safe:duration-150';
-
-const itemClasses =
-  'flex cursor-pointer items-center rounded-lg px-2.5 py-2 text-sm outline-none ' +
-  'data-[focused]:bg-sunken data-[selected]:text-text ' +
-  'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40';
-
-// --------------------------------------------------------------------- bits
+  'motion-safe:transition-opacity motion-safe:duration-150 ' +
+  'data-[state=open]:opacity-100 data-[state=closed]:opacity-0';
 
 function Row({
   option,
   selected,
-  multiple,
+  active,
   renderOption,
+  multiple,
 }: {
   option: DropdownOption<string>;
   selected: boolean;
-  multiple?: boolean;
+  active: boolean;
   renderOption?: (option: DropdownOption<never>) => ReactNode;
+  multiple?: boolean;
 }) {
   if (renderOption) return <>{renderOption(option as DropdownOption<never>)}</>;
 
@@ -147,9 +196,15 @@ function Row({
       {!multiple && selected ? (
         <Icon name="check" size={16} className="shrink-0 text-accent" />
       ) : null}
+      {active ? <span className="sr-only">(highlighted)</span> : null}
     </span>
   );
 }
+
+const itemClasses =
+  'flex cursor-pointer items-center rounded-lg px-2.5 py-2 text-sm outline-none ' +
+  'data-[highlighted]:bg-sunken data-[state=checked]:text-text ' +
+  'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40';
 
 function FieldShell({
   label,
@@ -166,10 +221,13 @@ function FieldShell({
   invalid?: boolean;
   children: ReactNode;
   className?: string;
+  /** The id of the control the label names. */
   controlId: string;
 }) {
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
+      {/* A real label, associated with the control — clicking it focuses the
+          dropdown, and a screen reader announces the two together. */}
       {label ? (
         <label htmlFor={controlId} className="w-fit text-sm font-medium">
           {label}
@@ -183,6 +241,71 @@ function FieldShell({
       ) : hint ? (
         <p className={cn('text-xs', invalid ? 'text-danger' : 'text-muted')}>{hint}</p>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * The scrolling list. Windowed above a threshold so a thousand-option field
+ * stays responsive — below it, plain rendering keeps group headings and
+ * variable row heights simple.
+ */
+function OptionList<T extends string>({
+  rows,
+  renderRow,
+  hasDescriptions,
+}: {
+  rows: ReturnType<typeof useGrouped<T>>;
+  renderRow: (row: ReturnType<typeof useGrouped<T>>[number], index: number) => ReactNode;
+  hasDescriptions: boolean;
+}) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualize = rows.length > VIRTUALIZE_ABOVE;
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => (hasDescriptions ? ROW_HEIGHT_WITH_DESCRIPTION : ROW_HEIGHT),
+    overscan: 8,
+    enabled: virtualize,
+  });
+
+  if (!virtualize) {
+    return (
+      <div ref={parentRef} className="max-h-72 overflow-y-auto p-1.5">
+        {rows.map(renderRow)}
+      </div>
+    );
+  }
+
+  return (
+    <div ref={parentRef} className="max-h-72 overflow-y-auto p-1.5">
+      <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+        {virtualizer.getVirtualItems().map((item) => (
+          <div
+            key={item.key}
+            data-index={item.index}
+            ref={virtualizer.measureElement}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              transform: `translateY(${item.start}px)`,
+            }}
+          >
+            {renderRow(rows[item.index]!, item.index)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GroupHeading({ label }: { label: string }) {
+  return (
+    <div className="border-b border-line px-2.5 pb-1.5 pt-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted first:pt-1">
+      {label}
     </div>
   );
 }
@@ -202,133 +325,52 @@ function Status({ loading, empty }: { loading?: boolean; empty: string }) {
   );
 }
 
-/**
- * The scrolling list, windowed above a threshold so a thousand-option field
- * stays responsive. Below it, plain rendering keeps group headings and variable
- * row heights simple.
- */
-function OptionList({
-  options,
-  selectedValues,
-  multiple,
-  renderOption,
-}: {
-  options: DropdownOption<string>[];
-  selectedValues: string[];
-  multiple?: boolean;
-  renderOption?: (option: DropdownOption<never>) => ReactNode;
-}) {
-  const parentRef = useRef<HTMLDivElement>(null);
-  const hasDescriptions = options.some((option) => option.description);
-  const virtualize = options.length > VIRTUALIZE_ABOVE;
+// ------------------------------------------------------------------- select
 
-  const virtualizer = useVirtualizer({
-    count: options.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => (hasDescriptions ? ROW_HEIGHT_WITH_DESCRIPTION : ROW_HEIGHT),
-    overscan: 8,
-    enabled: virtualize,
-  });
-
-  const item = (option: DropdownOption<string>, index: number) => (
-    <Select.Option key={option.value} option={option} index={index} className={itemClasses}>
-      <Row
-        option={option}
-        selected={selectedValues.includes(option.value)}
-        multiple={multiple}
-        renderOption={renderOption}
-      />
-    </Select.Option>
-  );
-
-  if (!virtualize) {
-    return (
-      <div ref={parentRef} className="max-h-72 overflow-y-auto p-1.5">
-        {options.map(item)}
-      </div>
-    );
-  }
-
-  return (
-    <div ref={parentRef} className="max-h-72 overflow-y-auto p-1.5">
-      <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
-        {virtualizer.getVirtualItems().map((row) => (
-          <div
-            key={row.key}
-            data-index={row.index}
-            ref={virtualizer.measureElement}
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${row.start}px)` }}
-          >
-            {item(options[row.index]!, row.index)}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------- component
-
-export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
+function ComboboxDropdown<T extends string>(props: DropdownProps<T>) {
   const generatedId = useId();
   const controlId = props.id ?? generatedId;
-  const invalid = props.invalid || Boolean(props.error);
+  const collection = useCollection(props.options);
+  const rows = useGrouped(props.options);
+  const hasDescriptions = props.options.some((option) => option.description);
 
   const values = props.multiple ? props.value : props.value === null ? [] : [props.value];
   const selected = props.options.filter((option) => values.includes(option.value));
-
-  // Options are grouped only when a group is actually set, so the common
-  // ungrouped case never pays for a nested structure.
-  const grouped = useMemo(() => {
-    if (!props.options.some((option) => option.group)) return null;
-    const order: string[] = [];
-    const buckets = new Map<string, DropdownOption<T>[]>();
-    for (const option of props.options) {
-      const key = option.group ?? '';
-      if (!buckets.has(key)) {
-        buckets.set(key, []);
-        order.push(key);
-      }
-      buckets.get(key)!.push(option);
-    }
-    return order.map((key) => ({ label: key, items: buckets.get(key)! }));
-  }, [props.options]);
-
-  const searchable = props.searchable || Boolean(props.onSearch);
 
   return (
     <FieldShell
       label={props.label}
       hint={props.hint}
       error={props.error}
-      invalid={invalid}
+      invalid={props.invalid}
       className={props.className}
       controlId={controlId}
     >
-      <Select.Root
-        options={grouped ?? props.options}
-        optionLabel="label"
-        optionValue="value"
-        optionDisabled="disabled"
-        {...(grouped ? { optionGroupLabel: 'label', optionGroupChildren: 'items' } : {})}
-        value={props.multiple ? props.value : props.value}
+      <Combobox.Root
+        collection={collection}
+        value={values}
         multiple={props.multiple}
-        disabled={props.disabled || props.readOnly}
-        invalid={invalid}
-        onValueChange={(event: { value: unknown }) => {
-          if (props.multiple) props.onChange((event.value ?? []) as T[]);
-          else props.onChange((event.value ?? null) as T | null);
+        disabled={props.disabled}
+        readOnly={props.readOnly}
+        invalid={props.invalid || Boolean(props.error)}
+        openOnClick
+        loopFocus
+        // Keep the query when picking from a multi-select, so a visitor can
+        // tick several matches of one search without retyping it.
+        selectionBehavior={props.multiple ? 'preserve' : 'replace'}
+        closeOnSelect={!props.multiple}
+        positioning={{ sameWidth: true, gutter: 6, flip: true, strategy: 'fixed' }}
+        onValueChange={(details) => {
+          if (props.multiple) props.onChange(details.value as T[]);
+          else props.onChange((details.value[0] as T) ?? null);
         }}
-        onFilterValueChange={(event: { query: string }) => props.onSearch?.(event.query)}
+        onInputValueChange={(details) => props.onSearch?.(details.inputValue)}
       >
-        <Select.Trigger
-          id={controlId}
-          className={cn(controlClasses, controlTone(invalid))}
+        <Combobox.Control
+          className={cn(controlClasses, controlTone(props.invalid || Boolean(props.error)))}
         >
-          {props.renderValue ? (
-            <span className="min-w-0 flex-1 truncate">{props.renderValue(selected)}</span>
-          ) : props.multiple && selected.length > 0 ? (
-            <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+          {props.multiple && selected.length > 0 ? (
+            <span className="flex shrink-0 flex-wrap items-center gap-1">
               {selected.slice(0, 2).map((option) => (
                 <span
                   key={option.value}
@@ -341,68 +383,70 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
                 <span className="text-xs text-muted">+{selected.length - 2}</span>
               ) : null}
             </span>
-          ) : (
-            <Select.Value
-              placeholder={props.placeholder ?? 'Select…'}
-              className="min-w-0 flex-1 truncate data-[placeholder]:text-muted"
-            />
-          )}
-
-          {props.clearable && selected.length > 0 ? (
-            <Select.Clear
-              aria-label="Clear selection"
-              className="shrink-0 rounded p-0.5 text-muted transition-colors hover:text-text"
-            >
-              <Icon name="close" size={16} />
-            </Select.Clear>
           ) : null}
 
-          <Select.Indicator className="shrink-0 text-muted transition-transform data-[state=open]:rotate-180">
-            <Icon name="chevronDown" size={18} />
-          </Select.Indicator>
-        </Select.Trigger>
+          <Combobox.Input
+            id={controlId}
+            name={props.name}
+            placeholder={props.placeholder ?? 'Search…'}
+            className="min-w-0 flex-1 bg-transparent py-2 outline-none placeholder:text-muted"
+          />
 
-        <Select.Portal>
-          <Select.Positioner sideOffset={6} flip shift strategy="fixed">
-            {/* The positioner has no same-width option, but it does publish
-                the trigger's width as a custom property, and the popup
-                inherits it. Setting width rather than relying on the
-                min-width it already applies keeps a long option label from
-                making the menu wider than the control. */}
-            <Select.Popup
-              className={cn(menuClasses, 'w-(--px-positioner-anchor-width)')}
+          {props.clearable && selected.length > 0 ? (
+            <Combobox.ClearTrigger
+              aria-label="Clear selection"
+              className="shrink-0 rounded p-0.5 text-muted hover:text-text"
             >
-              {searchable ? (
-                <div className="border-b border-line px-3">
-                  <Select.Filter
-                    placeholder="Search…"
-                    className="h-10 w-full bg-transparent text-sm outline-none placeholder:text-muted"
-                  />
-                </div>
-              ) : null}
+              <Icon name="close" size={16} />
+            </Combobox.ClearTrigger>
+          ) : null}
 
+          <Combobox.Trigger
+            aria-label="Show options"
+            className="shrink-0 text-muted transition-transform data-[state=open]:rotate-180"
+          >
+            <Icon name="chevronDown" size={18} />
+          </Combobox.Trigger>
+        </Combobox.Control>
+
+        <Portal>
+          <Combobox.Positioner>
+            <Combobox.Content className={menuClasses}>
               {props.loading || props.options.length === 0 ? (
                 <Status loading={props.loading} empty={props.emptyMessage ?? 'No matches'} />
               ) : (
-                <Select.List>
-                  <OptionList
-                    options={props.options as DropdownOption<string>[]}
-                    selectedValues={values as string[]}
-                    multiple={props.multiple}
-                    renderOption={
-                      props.renderOption as ((option: DropdownOption<never>) => ReactNode) | undefined
-                    }
-                  />
-                </Select.List>
+                <OptionList
+                  rows={rows}
+                  hasDescriptions={hasDescriptions}
+                  renderRow={(row, index) =>
+                    row.kind === 'group' ? (
+                      <GroupHeading key={`g-${index}`} label={row.label} />
+                    ) : (
+                      <Combobox.Item
+                        key={row.option.value}
+                        item={row.option}
+                        className={itemClasses}
+                      >
+                        <Row
+                          option={row.option as DropdownOption<string>}
+                          selected={values.includes(row.option.value)}
+                          active={false}
+                          multiple={props.multiple}
+                          renderOption={
+                            props.renderOption as
+                              | ((option: DropdownOption<never>) => ReactNode)
+                              | undefined
+                          }
+                        />
+                      </Combobox.Item>
+                    )
+                  }
+                />
               )}
-
-              <Select.Empty className="px-3 py-6 text-center text-sm text-muted">
-                {props.emptyMessage ?? 'No matches'}
-              </Select.Empty>
-            </Select.Popup>
-          </Select.Positioner>
-        </Select.Portal>
-      </Select.Root>
+            </Combobox.Content>
+          </Combobox.Positioner>
+        </Portal>
+      </Combobox.Root>
     </FieldShell>
   );
 }
