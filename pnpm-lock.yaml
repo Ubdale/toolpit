@@ -65,9 +65,6 @@ importers:
       upscaler:
         specifier: ^1.0.0
         version: 1.0.0(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))
-      vtracer-webapp:
-        specifier: ^0.4.0
-        version: 0.4.0
       xlsx:
         specifier: ^0.18.5
         version: 0.18.5
@@ -1979,9 +1976,6 @@ packages:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
-
-  vtracer-webapp@0.4.0:
-    resolution: {integrity: sha512-xd17W4cnvlRmRaRiN/Dqp4QpqqAcwhsEi+YDvQ1UI2GkO2MTGEe/1fFZjFuzsIo29JR99s3hElalZfJ8pypoXQ==}
 
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
@@ -4143,8 +4137,6 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   uuid@8.3.2: {}
-
-  vtracer-webapp@0.4.0: {}
 
   webidl-conversions@3.0.1: {}
 
