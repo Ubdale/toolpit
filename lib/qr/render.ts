@@ -68,17 +68,38 @@ function darkPath(matrix: QrMatrix, style: QrStyle): string {
   return parts.join('');
 }
 
+/**
+ * A colour safe to drop into an SVG attribute.
+ *
+ * The colours reach this from an `<input type="color">`, which the browser
+ * constrains - but the constraint lives in the UI, not here, and this function
+ * builds markup that goes on to be injected with dangerouslySetInnerHTML. A
+ * value like `#000"/><script>...` would break out of the attribute and execute,
+ * so the check belongs where the markup is written rather than where it
+ * happens to be typed today. Anything unrecognised falls back rather than
+ * throwing: a wrong colour is a better outcome than a blank tool.
+ */
+function safeColor(value: string, fallback: string): string {
+  const trimmed = String(value ?? '').trim();
+  const named = /^[a-z]{3,20}$/i;
+  const hex = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+  const functional = /^(?:rgb|hsl)a?\(\s*[\d.,%\s/]+\)$/i;
+  return hex.test(trimmed) || named.test(trimmed) || functional.test(trimmed) ? trimmed : fallback;
+}
+
 export function qrToSvg(matrix: QrMatrix, style: QrStyle = defaultStyle): string {
   const dimension = (matrix.size + style.margin * 2) * style.scale;
+  const dark = safeColor(style.dark, defaultStyle.dark);
+  const light = safeColor(style.light, defaultStyle.light);
   const background = style.transparent
     ? ''
-    : `<rect width="${dimension}" height="${dimension}" fill="${style.light}"/>`;
+    : `<rect width="${dimension}" height="${dimension}" fill="${light}"/>`;
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${dimension}" height="${dimension}" ` +
     `viewBox="0 0 ${dimension} ${dimension}" shape-rendering="crispEdges">` +
     background +
-    `<path fill="${style.dark}" d="${darkPath(matrix, style)}"/>` +
+    `<path fill="${dark}" d="${darkPath(matrix, style)}"/>` +
     `</svg>`
   );
 }
