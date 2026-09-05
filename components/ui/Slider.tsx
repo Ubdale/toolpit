@@ -361,13 +361,15 @@ function NumberBox({
 
   return (
     <span className="flex shrink-0 items-center gap-1">
+      {/* Deliberately a text input rather than type="number": a native number
+          field accepts "12e4", changes value when the wheel passes over it,
+          and reports an empty string for anything it cannot parse. The draft
+          string above is what makes typing feel normal, and `commit` does the
+          parsing and clamping once, on blur. */}
       <input
-        type="number"
+        type="text"
         inputMode="decimal"
         value={draft}
-        min={min}
-        max={max}
-        step={step}
         disabled={disabled}
         aria-label="Value"
         onChange={(event) => setDraft(event.target.value)}
@@ -376,6 +378,15 @@ function NumberBox({
           if (event.key === 'Enter') {
             event.preventDefault();
             commit();
+          }
+          // Arrow keys still step the value, as they would on a number field.
+          if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            event.preventDefault();
+            const direction = event.key === 'ArrowUp' ? 1 : -1;
+            const current = Number(draft);
+            if (Number.isFinite(current)) {
+              onCommit(Math.min(max, Math.max(min, Number((current + direction * step).toFixed(precision)))));
+            }
           }
         }}
         className={cn(

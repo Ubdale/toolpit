@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
+import { Checkbox } from '@/components/ui/Choice';
 import { Button } from '@/components/ui/Button';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { ErrorMessage, Field, RadioCards, TextInput } from '@/components/ui/Field';
@@ -210,15 +211,11 @@ export default function PdfToImagesTool() {
             />
 
             <div className="flex flex-col gap-3">
-              <label className="flex items-center gap-2.5 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  checked={allPages}
-                  onChange={(event) => setAllPages(event.target.checked)}
-                  className="size-4 accent-accent"
-                />
-                Convert every page
-              </label>
+              <Checkbox
+          label={<>Convert every page</>}
+          checked={allPages}
+          onChange={(checked) => setAllPages(checked)}
+        />
 
               {!allPages ? (
                 <Field

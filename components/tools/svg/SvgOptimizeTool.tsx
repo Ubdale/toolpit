@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
+import { Checkbox } from '@/components/ui/Choice';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Dropzone } from '@/components/ui/Dropzone';
@@ -245,17 +246,13 @@ function Toggle({
   onChange: (value: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-3 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        className="mt-0.5 size-4 shrink-0 accent-accent"
-      />
-      <span>
+    <Checkbox
+          label={<><span>
         <span className="block text-sm font-medium">{label}</span>
         <span className="mt-0.5 block text-xs text-muted">{hint}</span>
-      </span>
-    </label>
+      </span></>}
+          checked={checked}
+          onChange={(checked) => onChange(checked)}
+        />
   );
 }

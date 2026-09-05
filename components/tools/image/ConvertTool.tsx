@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
+import { Checkbox } from '@/components/ui/Choice';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { Dropzone } from '@/components/ui/Dropzone';
@@ -197,20 +198,16 @@ export default function ConvertTool() {
         ) : null}
 
         <div className="border-t border-line pt-4">
-          <label className="flex items-start gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={limitEdge}
-              onChange={(event) => setLimitEdge(event.target.checked)}
-              className="mt-0.5 size-4 accent-accent"
-            />
-            <span>
+          <Checkbox
+          label={<><span>
               Also cap the longest edge
               <span className="mt-0.5 block text-xs text-muted">
                 Converting and shrinking in one pass, for the web.
               </span>
-            </span>
-          </label>
+            </span></>}
+          checked={limitEdge}
+          onChange={(checked) => setLimitEdge(checked)}
+        />
         </div>
 
         {limitEdge ? (

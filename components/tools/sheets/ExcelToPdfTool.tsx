@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { Checkbox as ArkCheckbox } from '@ark-ui/react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
+import { Icon } from '@/components/ui/Icon';
+import { Checkbox } from '@/components/ui/Choice';
 import { Button } from '@/components/ui/Button';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { ErrorMessage, RadioCards } from '@/components/ui/Field';
@@ -327,22 +330,28 @@ export default function ExcelToPdfTool() {
                       const on = selected.has(key);
                       return (
                         <li key={key}>
-                          <label
-                            className={`flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs transition-colors ${
+                          <ArkCheckbox.Root
+                            checked={on}
+                            onCheckedChange={() => toggleSheet(entry.id, table.name)}
+                            className={`flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent ${
                               on ? 'border-accent bg-accent-soft' : 'border-line bg-sunken'
                             }`}
                           >
-                            <input
-                              type="checkbox"
-                              checked={on}
-                              onChange={() => toggleSheet(entry.id, table.name)}
-                              className="size-3.5 accent-accent"
-                            />
+                            <ArkCheckbox.Control
+                              className={`grid size-4 shrink-0 place-items-center rounded border transition-colors ${
+                                on ? 'border-accent bg-accent text-accent-contrast' : 'border-line-strong bg-surface'
+                              }`}
+                            >
+                              <ArkCheckbox.Indicator>
+                                <Icon name="check" size={11} />
+                              </ArkCheckbox.Indicator>
+                            </ArkCheckbox.Control>
+                            <ArkCheckbox.HiddenInput />
                             <span className="font-medium">{table.name}</span>
                             <span className="text-muted">
                               {table.rows.length}×{table.rows[0]?.length ?? 0}
                             </span>
-                          </label>
+                          </ArkCheckbox.Root>
                         </li>
                       );
                     })}
@@ -464,17 +473,13 @@ function Toggle({
   onChange: (value: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-3 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        className="mt-0.5 size-4 shrink-0 accent-accent"
-      />
-      <span>
+    <Checkbox
+          label={<><span>
         <span className="block text-sm font-medium">{label}</span>
         <span className="mt-0.5 block text-xs text-muted">{hint}</span>
-      </span>
-    </label>
+      </span></>}
+          checked={checked}
+          onChange={(checked) => onChange(checked)}
+        />
   );
 }

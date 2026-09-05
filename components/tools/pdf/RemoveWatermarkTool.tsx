@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { Checkbox as ArkCheckbox } from '@ark-ui/react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
+import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { ErrorMessage } from '@/components/ui/Field';
@@ -250,17 +252,25 @@ function FindingRow({
 }) {
   return (
     <li>
-      <label
-        className={`flex cursor-pointer gap-3 rounded-xl border px-3.5 py-3 transition-colors ${
+      {/* The card itself is the checkbox, so the whole row is the hit target
+          and the selected styling lives on the same element as the state. */}
+      <ArkCheckbox.Root
+        checked={checked}
+        onCheckedChange={onToggle}
+        className={`flex cursor-pointer gap-3 rounded-xl border px-3.5 py-3 transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent ${
           checked ? 'border-accent bg-accent-soft' : 'border-line hover:border-line-strong'
         }`}
       >
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={onToggle}
-          className="mt-0.5 size-4 shrink-0 accent-accent"
-        />
+        <ArkCheckbox.Control
+          className={`mt-0.5 grid size-[18px] shrink-0 place-items-center rounded-[5px] border transition-colors ${
+            checked ? 'border-accent bg-accent text-accent-contrast' : 'border-line-strong bg-surface'
+          }`}
+        >
+          <ArkCheckbox.Indicator>
+            <Icon name="check" size={13} />
+          </ArkCheckbox.Indicator>
+        </ArkCheckbox.Control>
+        <ArkCheckbox.HiddenInput />
         <span className="min-w-0">
           <span className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium">{finding.label}</span>
@@ -273,7 +283,7 @@ function FindingRow({
             {CONFIDENCE_LABEL[finding.confidence]}
           </span>
         </span>
-      </label>
+      </ArkCheckbox.Root>
     </li>
   );
 }

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
+import { Checkbox } from '@/components/ui/Choice';
 import { Button } from '@/components/ui/Button';
 import { ErrorMessage } from '@/components/ui/Field';
 import { ProgressBar } from '@/components/ui/ProgressBar';
@@ -281,15 +282,11 @@ export default function ScreenRecorderTool() {
               </p>
             </div>
 
-            <label className="flex w-fit cursor-pointer items-center gap-2.5 text-sm font-medium">
-              <input
-                type="checkbox"
-                checked={withMic}
-                onChange={(event) => setWithMic(event.target.checked)}
-                className="size-4 accent-accent"
-              />
-              Record my microphone as well
-            </label>
+            <Checkbox
+          label={<>Record my microphone as well</>}
+          checked={withMic}
+          onChange={(checked) => setWithMic(checked)}
+        />
 
             <Button size="lg" onClick={start} className="w-fit">
               Choose a screen and record

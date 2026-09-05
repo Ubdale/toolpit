@@ -9,6 +9,7 @@ import {
 } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
+import { Checkbox } from '@/components/ui/Choice';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { Dropzone } from '@/components/ui/Dropzone';
@@ -869,30 +870,22 @@ export default function EditTool() {
             ) : null}
 
             {'filled' in selected ? (
-              <label className="flex items-center gap-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={selected.filled}
-                  onChange={(event) => patchSelected({ filled: event.target.checked })}
-                  className="size-4 accent-accent"
-                />
-                Fill the shape
+              <Checkbox
+                label={<>Fill the shape
                 {selected.filled ? (
                   <span className="text-xs text-muted">— a filled white box hides what is under it</span>
-                ) : null}
-              </label>
+                ) : null}</>}
+                checked={selected.filled}
+                onChange={(checked) => patchSelected({ filled: checked })}
+              />
             ) : null}
 
             {'arrow' in selected ? (
-              <label className="flex items-center gap-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={selected.arrow}
-                  onChange={(event) => patchSelected({ arrow: event.target.checked })}
-                  className="size-4 accent-accent"
-                />
-                Arrowhead
-              </label>
+              <Checkbox
+                label={<>Arrowhead</>}
+                checked={selected.arrow}
+                onChange={(checked) => patchSelected({ arrow: checked })}
+              />
             ) : null}
 
             {'opacity' in selected ? (
@@ -1015,15 +1008,11 @@ export default function EditTool() {
                 />
               )}
             </Field>
-            <label className="flex items-center gap-3 text-sm">
-              <input
-                type="checkbox"
+            <Checkbox
+                label={<>Fill new shapes</>}
                 checked={filled}
-                onChange={(event) => setFilled(event.target.checked)}
-                className="size-4 accent-accent"
+                onChange={(checked) => setFilled(checked)}
               />
-              Fill new shapes
-            </label>
           </>
         ) : null}
 

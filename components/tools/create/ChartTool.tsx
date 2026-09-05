@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEven
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
 import { Button } from '@/components/ui/Button';
+import { Toggle } from '@/components/ui/Choice';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { ErrorMessage, Field, RangeInput, TextInput } from '@/components/ui/Field';
@@ -481,29 +482,3 @@ export default function ChartTool() {
   );
 }
 
-function Toggle({
-  checked,
-  onChange,
-  label,
-  hint,
-}: {
-  checked: boolean;
-  onChange: (value: boolean) => void;
-  label: string;
-  hint?: string;
-}) {
-  return (
-    <label className="flex items-start gap-3 text-sm">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        className="mt-0.5 size-4 accent-accent"
-      />
-      <span>
-        {label}
-        {hint ? <span className="mt-0.5 block text-xs text-muted">{hint}</span> : null}
-      </span>
-    </label>
-  );
-}

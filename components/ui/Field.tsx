@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, type ComponentProps, type ReactNode } from 'react';
+import { RadioGroup } from '@ark-ui/react';
 
 import { cn } from '@/lib/cn';
 
@@ -54,7 +55,15 @@ type RadioCardsProps<T extends string> = {
   name: string;
 };
 
-/** Segmented choice rendered as real radios, so arrow keys work. */
+/**
+ * Segmented choice, rendered on Ark's RadioGroup.
+ *
+ * The card is the radio: the whole row is the hit target and the selected
+ * styling sits on the same element as the state. The real input stays in the
+ * accessibility tree but out of sight, because a native radio cannot be
+ * styled to match anything - `accent-color` sets the dot and leaves the rest
+ * as whatever the browser draws.
+ */
 export function RadioCards<T extends string>({
   legend,
   value,
@@ -63,42 +72,59 @@ export function RadioCards<T extends string>({
   name,
 }: RadioCardsProps<T>) {
   return (
-    <fieldset className="flex flex-col gap-1.5">
-      <legend className="mb-1.5 text-sm font-medium">{legend}</legend>
+    <RadioGroup.Root
+      value={value}
+      name={name}
+      onValueChange={(details) => onChange(details.value as T)}
+      className="flex flex-col gap-1.5"
+    >
+      <RadioGroup.Label className="mb-1.5 text-sm font-medium">{legend}</RadioGroup.Label>
+
       <div className="grid gap-2 sm:grid-cols-2">
         {options.map((option) => {
           const selected = option.value === value;
+
           return (
-            <label
+            <RadioGroup.Item
               key={option.value}
+              value={option.value}
               className={cn(
                 'flex cursor-pointer gap-3 rounded-xl border px-3.5 py-3 transition-colors',
-                'has-focus-visible:outline-2',
-                'has-focus-visible:outline-offset-2 has-focus-visible:outline-accent',
+                'has-focus-visible:outline-2 has-focus-visible:outline-offset-2',
+                'has-focus-visible:outline-accent',
                 selected
                   ? 'border-accent bg-accent-soft'
                   : 'border-line bg-surface hover:border-line-strong',
               )}
             >
-              <input
-                type="radio"
-                name={name}
-                value={option.value}
-                checked={selected}
-                onChange={() => onChange(option.value)}
-                className="mt-0.5 size-4 shrink-0 accent-accent"
-              />
-              <span>
-                <span className="block text-sm font-medium">{option.label}</span>
-                {option.description ? (
-                  <span className="mt-0.5 block text-xs text-muted">{option.description}</span>
+              <RadioGroup.ItemControl
+                className={cn(
+                  'mt-0.5 grid size-[18px] shrink-0 place-items-center rounded-full border transition-colors',
+                  selected
+                    ? 'border-accent bg-accent text-accent-contrast'
+                    : 'border-line-strong bg-surface',
+                )}
+              >
+                {selected ? (
+                  <span aria-hidden="true" className="block size-1.5 rounded-full bg-current" />
                 ) : null}
-              </span>
-            </label>
+              </RadioGroup.ItemControl>
+
+              <RadioGroup.ItemText asChild>
+                <span>
+                  <span className="block text-sm font-medium">{option.label}</span>
+                  {option.description ? (
+                    <span className="mt-0.5 block text-xs text-muted">{option.description}</span>
+                  ) : null}
+                </span>
+              </RadioGroup.ItemText>
+
+              <RadioGroup.ItemHiddenInput />
+            </RadioGroup.Item>
           );
         })}
       </div>
-    </fieldset>
+    </RadioGroup.Root>
   );
 }
 

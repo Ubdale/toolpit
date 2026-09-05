@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
+import { Checkbox } from '@/components/ui/Choice';
 import { Button } from '@/components/ui/Button';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { ErrorMessage, Field, RadioCards, RangeInput } from '@/components/ui/Field';
@@ -222,38 +223,26 @@ export default function PdfToExcelTool() {
             />
 
             <div className="grid gap-2 sm:grid-cols-2">
-              <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-3 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent">
-                <input
-                  type="checkbox"
-                  checked={style.typeNumbers}
-                  onChange={(event) =>
-                    setStyle((c) => ({ ...c, typeNumbers: event.target.checked }))
-                  }
-                  className="mt-0.5 size-4 shrink-0 accent-accent"
-                />
-                <span>
+              <Checkbox
+          label={<><span>
                   <span className="block text-sm font-medium">Numbers as numbers</span>
                   <span className="mt-0.5 block text-xs text-muted">
                     Keeps them looking identical, but lets you actually sum the column.
                   </span>
-                </span>
-              </label>
-              <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-3 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent">
-                <input
-                  type="checkbox"
-                  checked={style.markHeader}
-                  onChange={(event) =>
-                    setStyle((c) => ({ ...c, markHeader: event.target.checked }))
-                  }
-                  className="mt-0.5 size-4 shrink-0 accent-accent"
-                />
-                <span>
+                </span></>}
+          checked={style.typeNumbers}
+          onChange={(checked) => setStyle((c) => ({ ...c, typeNumbers: checked }))}
+        />
+              <Checkbox
+          label={<><span>
                   <span className="block text-sm font-medium">Mark the header row</span>
                   <span className="mt-0.5 block text-xs text-muted">
                     Bolds and freezes row 1 so it stays visible while scrolling.
                   </span>
-                </span>
-              </label>
+                </span></>}
+          checked={style.markHeader}
+          onChange={(checked) => setStyle((c) => ({ ...c, markHeader: checked }))}
+        />
             </div>
 
             <Field

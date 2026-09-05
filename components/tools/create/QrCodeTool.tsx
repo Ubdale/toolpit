@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
+import { Checkbox } from '@/components/ui/Choice';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { CopyButton } from '@/components/ui/CopyButton';
@@ -182,15 +183,11 @@ export default function QrCodeTool() {
                 )}
               </Field>
             ) : null}
-            <label className="flex items-center gap-3 text-sm">
-              <input
-                type="checkbox"
+            <Checkbox
+                label={<>This network is hidden</>}
                 checked={wifi.hidden}
-                onChange={(event) => setWifi({ ...wifi, hidden: event.target.checked })}
-                className="size-4 accent-accent"
+                onChange={(checked) => setWifi({ ...wifi, hidden: checked })}
               />
-              This network is hidden
-            </label>
           </>
         ) : null}
 
@@ -323,15 +320,11 @@ export default function QrCodeTool() {
           </Field>
         </div>
 
-        <label className="flex items-center gap-3 text-sm">
-          <input
-            type="checkbox"
-            checked={style.transparent}
-            onChange={(event) => updateStyle('transparent', event.target.checked)}
-            className="size-4 accent-accent"
-          />
-          Transparent background
-        </label>
+        <Checkbox
+                label={<>Transparent background</>}
+                checked={style.transparent}
+                onChange={(checked) => updateStyle('transparent', checked)}
+              />
 
         <Field
           label={`Corner rounding — ${Math.round(style.radius * 200)}%`}

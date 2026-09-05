@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { ToolSectionHeading, ToolSurface } from '@/components/tool/ToolSurface';
+import { Checkbox } from '@/components/ui/Choice';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { Dropzone } from '@/components/ui/Dropzone';
@@ -241,20 +242,16 @@ export default function ResizeTool() {
           </Field>
         ) : null}
 
-        <label className="flex items-start gap-3 text-sm">
-          <input
-            type="checkbox"
-            checked={noUpscale}
-            onChange={(event) => setNoUpscale(event.target.checked)}
-            className="mt-0.5 size-4 accent-accent"
-          />
-          <span>
+        <Checkbox
+          label={<><span>
             Never enlarge
             <span className="mt-0.5 block text-xs text-muted">
               Blowing a small image up adds pixels without adding detail.
             </span>
-          </span>
-        </label>
+          </span></>}
+          checked={noUpscale}
+          onChange={(checked) => setNoUpscale(checked)}
+        />
 
         <div className="border-t border-line pt-4">
           <Dropdown
