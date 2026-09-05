@@ -1,13 +1,13 @@
 'use client';
 
-import { Slider as ArkSlider } from '@ark-ui/react';
+import { Slider as PrimeSlider } from 'primereact/slider';
 import { useEffect, useId, useMemo, useState } from 'react';
 
 import { cn } from '@/lib/cn';
 
 /**
  * The one slider, in the same visual language as the Dropdown and on the same
- * headless foundation.
+ * headless foundation - PrimeReact's unstyled primitives.
  *
  * Two things here are not cosmetic:
  *
@@ -141,6 +141,13 @@ export function Slider({
     return closest;
   };
 
+  /** The machine reports one number or a pair; both arrive here as a list. */
+  const asPositions = (next: number | number[] | undefined): number[] => {
+    if (Array.isArray(next)) return next;
+    if (typeof next === 'number') return [next];
+    return positions;
+  };
+
   const fromPositions = (next: number[]) => {
     const values = next.map((p) => applySnap(mapper.toValue(p)));
     return (isRange ? [values[0]!, values[1]!] : values[0]!) as number | [number, number];
@@ -153,10 +160,10 @@ export function Slider({
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
-      <ArkSlider.Root
+      <PrimeSlider.Root
         id={fieldId}
         name={name}
-        value={positions}
+        value={isRange ? positions : positions[0]!}
         min={mapper.posMin}
         max={mapper.posMax}
         // In log space the step is a ratio, so it is derived rather than passed
@@ -166,14 +173,13 @@ export function Slider({
         readOnly={readOnly}
         invalid={invalid || Boolean(error)}
         orientation={orientation}
-        thumbAlignment="contain"
-        onValueChange={(details) => {
+        onValueChange={(event: { value?: number | number[] }) => {
           setDragging(true);
-          onInput?.(fromPositions(details.value));
+          onInput?.(fromPositions(asPositions(event.value)));
         }}
-        onValueChangeEnd={(details) => {
+        onValueChangeEnd={(event: { value?: number | number[] }) => {
           setDragging(false);
-          onChange(fromPositions(details.value));
+          onChange(fromPositions(asPositions(event.value)));
         }}
         className={cn(
           'flex gap-2',
@@ -183,7 +189,7 @@ export function Slider({
         {label || showLabel ? (
           <div className="flex items-baseline justify-between gap-3">
             {label ? (
-              <ArkSlider.Label className="text-sm font-medium">{label}</ArkSlider.Label>
+              <label htmlFor={fieldId} className="text-sm font-medium">{label}</label>
             ) : (
               <span />
             )}
@@ -210,26 +216,26 @@ export function Slider({
             marks?.some((mark) => mark.label) && orientation === 'horizontal' && 'mb-6',
           )}
         >
-          <ArkSlider.Control
+          <div
             className={cn(
               'group relative flex flex-1 touch-none select-none items-center',
               orientation === 'vertical' ? 'h-full w-6 flex-col justify-center' : 'h-6 w-full',
               disabled && 'cursor-not-allowed opacity-50',
             )}
           >
-            <ArkSlider.Track
+            <PrimeSlider.Track
               className={cn(
                 'overflow-hidden rounded-full bg-sunken',
                 orientation === 'vertical' ? 'h-full w-1.5' : 'h-1.5 w-full',
               )}
             >
-              <ArkSlider.Range
+              <PrimeSlider.Range
                 className={cn('rounded-full', invalid || error ? 'bg-danger' : 'bg-accent')}
               />
-            </ArkSlider.Track>
+            </PrimeSlider.Track>
 
             {positions.map((_, index) => (
-              <ArkSlider.Thumb
+              <PrimeSlider.Handle
                 key={index}
                 index={index}
                 // 20px keeps the handle above the ~44px touch guidance once the
@@ -241,56 +247,59 @@ export function Slider({
                   invalid || error ? 'border-danger' : 'border-accent',
                   readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing',
                 )}
-              >
-                <ArkSlider.HiddenInput />
-              </ArkSlider.Thumb>
+              />
             ))}
 
             {marks && marks.length > 0 ? (
-              // The group is the containing block Ark resolves its markers
-              // against - it places them at `inset-inline-start: calc(50% …)`
-              // and friends. Left to itself it is a flex child whose every
-              // child is absolutely positioned, so it collapses to zero width
-              // and 0%, 50% and 100% all land on the same pixel, stacking the
-              // labels on top of each other. Stretching it across the control
-              // gives those percentages a track to measure.
-              <ArkSlider.MarkerGroup
-                // `absolute!` because Ark writes `position:relative` as an
-                // inline style, which an ordinary class cannot outrank.
+              // Marks are positioned by us rather than by the library.
+              //
+              // The percentage each mark sits at is resolved against this
+              // container, so it must span the track - a zero-width parent
+              // collapses 0%, 50% and 100% onto the same pixel and stacks
+              // every label. Owning the container makes that impossible.
+              <div
+                aria-hidden="true"
                 className={cn(
-                  'absolute!',
-                  orientation === 'vertical'
-                    ? 'inset-y-0 left-full ml-2'
-                    : 'inset-x-0 top-full',
+                  'pointer-events-none absolute',
+                  orientation === 'vertical' ? 'inset-y-0 left-full ml-2' : 'inset-x-0 top-full',
                 )}
               >
-                {marks.map((mark, index) => (
-                  <ArkSlider.Marker
-                    key={mark.value}
-                    value={mapper.toPosition(mark.value)}
-                    className="mt-3 flex flex-col items-center text-[11px] text-muted data-[state=under-value]:text-accent"
-                  >
-                    <span aria-hidden="true" className="h-1 w-px bg-line-strong" />
-                    {mark.label ? (
-                      // Each label is centred on its tick, so the ends would
-                      // otherwise hang off the track and collide with their
-                      // neighbours. The first and last are pulled inward and
-                      // every label is kept on one line.
-                      <span
-                        className={cn(
-                          'mt-1 whitespace-nowrap',
-                          index === 0 && 'translate-x-[40%]',
-                          index === marks.length - 1 && '-translate-x-[40%]',
-                        )}
-                      >
-                        {mark.label}
-                      </span>
-                    ) : null}
-                  </ArkSlider.Marker>
-                ))}
-              </ArkSlider.MarkerGroup>
+                {marks.map((mark, index) => {
+                  const span = mapper.posMax - mapper.posMin;
+                  const percent =
+                    span === 0 ? 0 : ((mapper.toPosition(mark.value) - mapper.posMin) / span) * 100;
+                  const reached = (positions[0] ?? 0) >= mapper.toPosition(mark.value);
+
+                  return (
+                    <span
+                      key={mark.value}
+                      style={{ left: `${percent}%` }}
+                      className={cn(
+                        'absolute top-0 flex -translate-x-1/2 flex-col items-center text-[11px]',
+                        reached ? 'text-accent' : 'text-muted',
+                      )}
+                    >
+                      <span className="mt-3 h-1 w-px bg-line-strong" />
+                      {mark.label ? (
+                        // Each label is centred on its tick, so the outermost
+                        // two would hang off the ends of the track. They are
+                        // pulled inward and kept on one line.
+                        <span
+                          className={cn(
+                            'mt-1 whitespace-nowrap',
+                            index === 0 && 'translate-x-[40%]',
+                            index === marks.length - 1 && '-translate-x-[40%]',
+                          )}
+                        >
+                          {mark.label}
+                        </span>
+                      ) : null}
+                    </span>
+                  );
+                })}
+              </div>
             ) : null}
-          </ArkSlider.Control>
+          </div>
 
           {editable && !isRange ? (
             <NumberBox
@@ -305,7 +314,7 @@ export function Slider({
             />
           ) : null}
         </div>
-      </ArkSlider.Root>
+      </PrimeSlider.Root>
 
       {error ? (
         <p role="alert" className="text-xs text-danger">
