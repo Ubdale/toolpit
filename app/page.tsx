@@ -63,7 +63,7 @@ export default function HomePage() {
             Free online tools that never touch a server
           </h1>
           <p className="mt-6 text-pretty text-lg text-muted sm:text-xl">
-            Edit and sign PDFs, strip watermarks, resize images, trace vectors, build a resume,
+            Edit and sign PDFs, strip watermarks, resize images, clean up SVGs, build a resume,
             chart your numbers — {tools.length} tools running entirely in your browser. No uploads,
             no accounts, no watermarks, no limits.
           </p>

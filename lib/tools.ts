@@ -56,7 +56,7 @@ export const categories: Category[] = [
     id: 'svg',
     segment: 'svg',
     label: 'Vector & SVG',
-    blurb: 'Trace images to vectors, shrink SVGs, and build a full favicon set.',
+    blurb: 'Shrink bloated SVG exports and build a full favicon set.',
     phase: 2,
   },
   {
