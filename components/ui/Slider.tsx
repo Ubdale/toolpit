@@ -206,6 +206,8 @@ export function Slider({
           className={cn(
             'flex items-center gap-3',
             orientation === 'vertical' && 'h-full flex-col',
+            // Reserve space for the label row under the track.
+            marks?.some((mark) => mark.label) && orientation === 'horizontal' && 'mb-6',
           )}
         >
           <ArkSlider.Control
@@ -245,14 +247,45 @@ export function Slider({
             ))}
 
             {marks && marks.length > 0 ? (
-              <ArkSlider.MarkerGroup>
-                {marks.map((mark) => (
+              // The group is the containing block Ark resolves its markers
+              // against - it places them at `inset-inline-start: calc(50% …)`
+              // and friends. Left to itself it is a flex child whose every
+              // child is absolutely positioned, so it collapses to zero width
+              // and 0%, 50% and 100% all land on the same pixel, stacking the
+              // labels on top of each other. Stretching it across the control
+              // gives those percentages a track to measure.
+              <ArkSlider.MarkerGroup
+                // `absolute!` because Ark writes `position:relative` as an
+                // inline style, which an ordinary class cannot outrank.
+                className={cn(
+                  'absolute!',
+                  orientation === 'vertical'
+                    ? 'inset-y-0 left-full ml-2'
+                    : 'inset-x-0 top-full',
+                )}
+              >
+                {marks.map((mark, index) => (
                   <ArkSlider.Marker
                     key={mark.value}
                     value={mapper.toPosition(mark.value)}
-                    className="mt-3 text-[11px] text-muted data-[state=under-value]:text-accent"
+                    className="mt-3 flex flex-col items-center text-[11px] text-muted data-[state=under-value]:text-accent"
                   >
-                    {mark.label ?? ''}
+                    <span aria-hidden="true" className="h-1 w-px bg-line-strong" />
+                    {mark.label ? (
+                      // Each label is centred on its tick, so the ends would
+                      // otherwise hang off the track and collide with their
+                      // neighbours. The first and last are pulled inward and
+                      // every label is kept on one line.
+                      <span
+                        className={cn(
+                          'mt-1 whitespace-nowrap',
+                          index === 0 && 'translate-x-[40%]',
+                          index === marks.length - 1 && '-translate-x-[40%]',
+                        )}
+                      >
+                        {mark.label}
+                      </span>
+                    ) : null}
                   </ArkSlider.Marker>
                 ))}
               </ArkSlider.MarkerGroup>
