@@ -21,17 +21,29 @@ function roundedRectDistance(x, y, cx, cy, halfW, halfH, radius) {
   return outside + Math.min(Math.max(dx, dy), 0) - radius;
 }
 
-/** Signed distance to the upper half of a ring — the lock's shackle. */
-function shackleDistance(x, y, cx, cy, radius, thickness) {
-  if (y > cy) {
-    // Below the arc's centre the shackle becomes two straight legs.
-    const legX = Math.abs(x - cx) - radius;
-    return Math.abs(legX) - thickness / 2;
-  }
-  return Math.abs(Math.hypot(x - cx, y - cy) - radius) - thickness / 2;
+/** Signed distance to a capsule: a line segment thickened by `half`. */
+function capsuleDistance(x, y, ax, ay, bx, by, half) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const lengthSq = dx * dx + dy * dy;
+  // Project the point onto the segment, clamped to its ends so the caps round.
+  const t = lengthSq === 0 ? 0 : Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / lengthSq));
+  return Math.hypot(x - (ax + t * dx), y - (ay + t * dy)) - half;
 }
 
-function blend(base, layer, coverage) {
+/**
+ * Is the point inside the pit?
+ *
+ * The pit is a flat-mouthed box sitting on a half-round floor - the same shape
+ * the SVG draws with one path, kept in step by sharing the 32-unit grid.
+ */
+function insidePit(x, y, u) {
+  const inBox = x >= 3.8 * u && x <= 28.2 * u && y >= 13.2 * u && y <= 19 * u;
+  const inFloor = y >= 19 * u && Math.hypot(x - 16 * u, y - 19 * u) <= 12.2 * u;
+  return inBox || inFloor;
+}
+
+function blend(base, layer, coverage)  {
   return base.map((channel, index) =>
     Math.round(channel * (1 - coverage) + layer[index] * coverage),
   );
@@ -48,19 +60,35 @@ function renderPixels() {
 
       let colour = EMBER;
 
-      const body = roundedRectDistance(px, py, cx, SIZE * 0.63, SIZE * 0.27, SIZE * 0.19, SIZE * 0.06);
-      const shackle = shackleDistance(px, py, cx, SIZE * 0.40, SIZE * 0.155, SIZE * 0.075);
-      const shackleClipped = py > SIZE * 0.47 ? 1e9 : shackle;
-      const mark = Math.min(body, shackleClipped);
+      // Coverage is sampled rather than taken from the distance field.
+      //
+      // The pit is the union of a flat-mouthed box and a round floor that
+      // share an edge, and along that edge both distances are zero - so an
+      // analytic 0.5-minus-distance blend paints a half-covered seam straight
+      // across the shape. A boolean inside-test over a 4x4 grid has no such
+      // artefact, and 16 samples on 512px is imperceptible in build time.
+      const u = (SIZE * 0.82) / 32;
+      const originX = SIZE / 2 - 16 * u;
+      // The mark spans y 5 to 31.2 on the 32-unit grid, so its optical centre
+      // is 18.1 rather than 16 - centring on 16 leaves it visibly high.
+      const originY = SIZE / 2 - 18.1 * u;
 
-      // 1px of analytic anti-aliasing on the mark's edge.
-      const coverage = Math.min(1, Math.max(0, 0.5 - mark));
-      if (coverage > 0) colour = blend(colour, CREAM, coverage);
+      let hits = 0;
+      for (let sy = 0; sy < 4; sy += 1) {
+        for (let sx = 0; sx < 4; sx += 1) {
+          const mx = x + (sx + 0.5) / 4 - originX;
+          const my = y + (sy + 0.5) / 4 - originY;
+          if (
+            insidePit(mx, my, u) ||
+            capsuleDistance(mx, my, 10.6 * u, 6.2 * u, 21.4 * u, 6.2 * u, 1.25 * u) < 0 ||
+            capsuleDistance(mx, my, 16 * u, 6.2 * u, 16 * u, 13.2 * u, 1.25 * u) < 0
+          ) {
+            hits += 1;
+          }
+        }
+      }
 
-      // The keyhole is punched back out of the body in the brand orange.
-      const keyhole = roundedRectDistance(px, py, cx, SIZE * 0.63, SIZE * 0.028, SIZE * 0.075, SIZE * 0.028);
-      const keyCoverage = Math.min(1, Math.max(0, 0.5 - keyhole));
-      if (keyCoverage > 0) colour = blend(colour, EMBER, keyCoverage);
+      if (hits > 0) colour = blend(colour, CREAM, hits / 16);
 
       const offset = (y * SIZE + x) * 4;
       pixels[offset] = colour[0];
@@ -118,9 +146,10 @@ function encodePng(pixels) {
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" rx="7" fill="#d1541f"/>
-  <path d="M10 14V10a6 6 0 0 1 12 0v4" fill="none" stroke="#fbfaf8" stroke-width="2.6" stroke-linecap="round"/>
-  <rect x="6" y="13.5" width="20" height="12.5" rx="3.2" fill="#fbfaf8"/>
-  <rect x="14.9" y="18" width="2.2" height="4.2" rx="1.1" fill="#d1541f"/>
+  <g transform="translate(16 16) scale(0.82) translate(-16 -18.1)">
+    <path d="M3.8 13.2h24.4v5.8a12.2 12.2 0 0 1-24.4 0z" fill="#fbfaf8"/>
+    <path d="M10.6 6.2h10.8M16 6.2v7" fill="none" stroke="#fbfaf8" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
 </svg>
 `;
 

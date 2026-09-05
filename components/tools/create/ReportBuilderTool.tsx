@@ -10,6 +10,7 @@ import { Dropdown } from '@/components/ui/Dropdown';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { ErrorMessage } from '@/components/ui/Field';
 import { Icon } from '@/components/ui/Icon';
+import { Input } from '@/components/ui/Input';
 import { Slider } from '@/components/ui/Slider';
 import { useToast } from '@/components/ui/Toast';
 import { datasetFromFile, sampleDataset } from '@/lib/builder/dataset';
@@ -358,12 +359,13 @@ export default function ReportBuilderTool() {
           />
           <ErrorMessage>{error}</ErrorMessage>
 
-          <input
+          <Input
+            type="search"
             aria-label="Global search"
             placeholder="Search every column…"
+            clearable
             value={config.query.search ?? ''}
-            onChange={(event) => patch({ query: { ...config.query, search: event.target.value } })}
-            className="h-11 w-full rounded-xl border border-line bg-surface px-3 text-sm transition-colors hover:border-line-strong focus:border-accent"
+            onChange={(search) => patch({ query: { ...config.query, search } })}
           />
 
           <div className="border-t border-line pt-4">
@@ -468,12 +470,11 @@ export default function ReportBuilderTool() {
         <ToolSurface className="flex flex-col gap-5">
           <ToolSectionHeading>Formatting</ToolSectionHeading>
 
-          <input
+          <Input
             aria-label="Report title"
             placeholder="Report title"
             value={config.title}
-            onChange={(event) => patch({ title: event.target.value })}
-            className="h-11 w-full rounded-xl border border-line bg-surface px-3 text-sm transition-colors hover:border-line-strong focus:border-accent"
+            onChange={(title) => patch({ title })}
           />
 
           {numericFields.length > 0 ? (
