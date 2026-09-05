@@ -18,6 +18,8 @@ import {
   type Resume,
 } from '@/lib/resume/types';
 
+import { Modal } from '@/components/ui/Modal';
+
 import { ResumePreview } from './ResumePreview';
 import { Icon, type IconName } from '@/components/ui/Icon';
 
@@ -29,6 +31,10 @@ export default function ResumeTool() {
   const [pageSize, setPageSize] = useState<PageSize>('a4');
   const [scale, setScale] = useState(1);
   const [zoom, setZoom] = useState(0.62);
+  const [expanded, setExpanded] = useState(false);
+  // The dialog gets its own zoom: the point of opening it is to see the page
+  // larger, and inheriting the panel's setting would defeat that.
+  const [modalZoom, setModalZoom] = useState(1);
 
   const [layout, setLayout] = useState<LayoutResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -655,9 +661,20 @@ export default function ResumeTool() {
         <ToolSurface className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <ToolSectionHeading>Preview</ToolSectionHeading>
-            <span className="text-xs text-muted">
-              {layout ? `${layout.pageCount} page${layout.pageCount === 1 ? '' : 's'}` : '…'}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted">
+                {layout ? `${layout.pageCount} page${layout.pageCount === 1 ? '' : 's'}` : '…'}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={!layout}
+                onClick={() => setExpanded(true)}
+              >
+                <Icon name="fullscreen" size={16} />
+                Expand
+              </Button>
+            </div>
           </div>
 
           <div className="max-h-[38rem] overflow-y-auto rounded-xl bg-sunken p-4">
@@ -687,6 +704,48 @@ export default function ResumeTool() {
               approximated in the PDF — the standard PDF fonts cannot draw them.
             </p>
           ) : null}
+
+          {/* The same layout, given the room to be read rather than glanced
+              at. Its own zoom starts at 100% because the panel's 62% is a
+              thumbnail setting, not a reading one. */}
+          <Modal
+            open={expanded}
+            onClose={() => setExpanded(false)}
+            title="Resume preview"
+            description={
+              layout
+                ? `${layout.pageCount} page${layout.pageCount === 1 ? '' : 's'} · ${pageSize.toUpperCase()}`
+                : undefined
+            }
+            size="full"
+            footer={
+              <div className="flex w-full flex-wrap items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <span className="shrink-0 text-xs text-muted">
+                    Zoom {Math.round(modalZoom * 100)}%
+                  </span>
+                  <input
+                    type="range"
+                    aria-label="Preview zoom"
+                    min={50}
+                    max={200}
+                    step={1}
+                    value={modalZoom * 100}
+                    onChange={(event) => setModalZoom(Number(event.target.value) / 100)}
+                    className="h-1.5 w-full max-w-xs accent-accent"
+                  />
+                </div>
+                <Button onClick={exportPdf} disabled={isExporting}>
+                  <Icon name="download" size={16} />
+                  {isExporting ? 'Exporting…' : 'Download PDF'}
+                </Button>
+              </div>
+            }
+          >
+            <div className="flex justify-center bg-sunken p-6">
+              {layout ? <ResumePreview layout={layout} scale={modalZoom} /> : null}
+            </div>
+          </Modal>
 
           <ErrorMessage>{error}</ErrorMessage>
 

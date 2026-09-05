@@ -4,7 +4,13 @@ export type TemplateId =
   | 'minimal'
   | 'sidebar'
   | 'executive'
-  | 'compact';
+  | 'compact'
+  | 'academic'
+  | 'technical'
+  | 'graduate'
+  | 'consulting'
+  | 'creative'
+  | 'federal';
 
 export type FontFamily = 'sans' | 'serif';
 
@@ -25,7 +31,7 @@ export type ResumeTemplate = {
 };
 
 /**
- * Six templates, one layout engine.
+ * Twelve templates, one layout engine.
  *
  * Every template below is the same set of blocks with different spacing, rules
  * and type — which is the honest version of "pre-built templates". None of them
@@ -105,6 +111,80 @@ export const templates: ResumeTemplate[] = [
     sectionCaps: true,
     sidebar: false,
     density: 'dense',
+  },
+
+  // --------------------------------------------------------- second batch
+  {
+    id: 'academic',
+    name: 'Academic',
+    description: 'Serif, airy and unadorned - the register a CV for research posts expects.',
+    family: 'serif',
+    accent: '',
+    headerAlign: 'center',
+    sectionStyle: 'plain',
+    sectionCaps: false,
+    sidebar: false,
+    density: 'airy',
+  },
+  {
+    id: 'technical',
+    name: 'Technical',
+    description: 'Skills in a left column so a long stack does not crowd the history.',
+    family: 'sans',
+    accent: '#2f5d8c',
+    headerAlign: 'left',
+    sectionStyle: 'underline',
+    sectionCaps: true,
+    sidebar: true,
+    density: 'dense',
+  },
+  {
+    id: 'graduate',
+    name: 'Graduate',
+    description: 'Roomy sans for a first CV, where the page is not yet full.',
+    family: 'sans',
+    accent: '#6b4ea8',
+    headerAlign: 'center',
+    sectionStyle: 'underline',
+    sectionCaps: true,
+    sidebar: false,
+    density: 'airy',
+  },
+  {
+    id: 'consulting',
+    name: 'Consulting',
+    description: 'Dense serif with full-width rules, for a history measured in decades.',
+    family: 'serif',
+    accent: '#33302a',
+    headerAlign: 'left',
+    sectionStyle: 'rule',
+    sectionCaps: true,
+    sidebar: false,
+    density: 'dense',
+  },
+  {
+    id: 'creative',
+    name: 'Creative',
+    description: 'A warm accent and quiet headings - as much colour as parses safely.',
+    family: 'sans',
+    accent: '#b23c6b',
+    headerAlign: 'left',
+    sectionStyle: 'plain',
+    sectionCaps: false,
+    sidebar: false,
+    density: 'normal',
+  },
+  {
+    id: 'federal',
+    name: 'Government',
+    description: 'Ink only, capitals and rules. Nothing for a strict parser to trip on.',
+    family: 'serif',
+    accent: '',
+    headerAlign: 'left',
+    sectionStyle: 'rule',
+    sectionCaps: true,
+    sidebar: false,
+    density: 'normal',
   },
 ];
 
