@@ -41,11 +41,17 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false, address: false, email: false },
   manifest: '/manifest.webmanifest',
   icons: {
+    // The .ico is declared first and also sits at /favicon.ico, because
+    // browsers and crawlers request that path whether or not a page names it.
+    // An SVG follows for anything that will render one crisply at any size.
     icon: [
+      { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
       { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
     ],
-    apple: [{ url: '/icon-512.png', sizes: '512x512' }],
+    shortcut: ['/favicon.ico'],
+    apple: [{ url: '/icon-192.png', sizes: '180x180' }],
   },
   openGraph: {
     type: 'website',

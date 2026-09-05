@@ -1,13 +1,18 @@
-// Generates the two icon assets the manifest points at.
+// Generates every icon asset: the SVG, the 512px PNG the manifest points at,
+// and a favicon.ico carrying 16, 32 and 48px cuts.
 //
-// The PNG is rasterised here with a tiny zlib-backed encoder rather than pulled
-// from an image library: it is a flat brand mark made of a rounded rectangle
-// and an arc, and this keeps the dependency list honest.
+// Rasterised here with a tiny zlib-backed encoder rather than pulled from an
+// image library: it is a flat brand mark made of a rounded rectangle, a
+// half-disc and two capsules, and this keeps the dependency list honest.
+//
+// The .ico matters more than it looks. Browsers and crawlers request
+// /favicon.ico by path whether or not the page declares one, and a 404 there
+// leaves some of them showing a generic page glyph - or a stale icon they
+// cached earlier.
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { deflateSync } from 'node:zlib';
 
-const SIZE = 512;
 const EMBER = [209, 84, 31];
 const CREAM = [251, 250, 248];
 
@@ -49,9 +54,8 @@ function blend(base, layer, coverage)  {
   );
 }
 
-function renderPixels() {
+function renderPixels(SIZE) {
   const pixels = Buffer.alloc(SIZE * SIZE * 4);
-  const cx = SIZE / 2;
 
   for (let y = 0; y < SIZE; y += 1) {
     for (let x = 0; x < SIZE; x += 1) {
@@ -121,7 +125,7 @@ function chunk(type, data) {
   return Buffer.concat([length, body, crc]);
 }
 
-function encodePng(pixels) {
+function encodePng(pixels, SIZE) {
   const stride = SIZE * 4;
   // PNG wants a filter byte in front of every scanline; 0 = no filter.
   const raw = Buffer.alloc((stride + 1) * SIZE);
@@ -153,7 +157,49 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
 </svg>
 `;
 
+/**
+ * Packs PNGs into an .ico.
+ *
+ * The format predates PNG, but every browser in use has accepted PNG-compressed
+ * entries for well over a decade, and they are far smaller than the BMP cuts
+ * the original spec called for.
+ */
+function encodeIco(entries) {
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // 1 = icon
+  header.writeUInt16LE(entries.length, 4);
+
+  const directory = Buffer.alloc(16 * entries.length);
+  let offset = header.length + directory.length;
+
+  entries.forEach((entry, index) => {
+    const at = index * 16;
+    // 256 is written as 0, which is the format's way of saying "not a byte".
+    directory[at] = entry.size >= 256 ? 0 : entry.size;
+    directory[at + 1] = entry.size >= 256 ? 0 : entry.size;
+    directory[at + 2] = 0; // palette size
+    directory[at + 3] = 0; // reserved
+    directory.writeUInt16LE(1, at + 4); // colour planes
+    directory.writeUInt16LE(32, at + 6); // bits per pixel
+    directory.writeUInt32LE(entry.data.length, at + 8);
+    directory.writeUInt32LE(offset, at + 12);
+    offset += entry.data.length;
+  });
+
+  return Buffer.concat([header, directory, ...entries.map((entry) => entry.data)]);
+}
+
 await mkdir(publicDir, { recursive: true });
-await writeFile(path.join(publicDir, 'icon-512.png'), encodePng(renderPixels()));
+
+await writeFile(path.join(publicDir, 'icon-512.png'), encodePng(renderPixels(512), 512));
+await writeFile(path.join(publicDir, 'icon-192.png'), encodePng(renderPixels(192), 192));
+await writeFile(path.join(publicDir, 'icon-32.png'), encodePng(renderPixels(32), 32));
 await writeFile(path.join(publicDir, 'icon.svg'), svg);
-console.log('[toolpit] wrote public/icon-512.png and public/icon.svg');
+
+const ico = encodeIco(
+  [16, 32, 48].map((size) => ({ size, data: encodePng(renderPixels(size), size) })),
+);
+await writeFile(path.join(publicDir, 'favicon.ico'), ico);
+
+console.log('[toolpit] wrote favicon.ico (16/32/48), icon-32, icon-192, icon-512 and icon.svg');
