@@ -91,6 +91,27 @@ export default function EditTool() {
 
   const selected = annotations.find((annotation) => annotation.id === selectedId) ?? null;
 
+  // Everything derived from the document is cleared when a different one is
+  // loaded.
+  //
+  // The extracted-text cache is keyed by page index alone, so without this a
+  // second upload found `textPages.has(0)` still true from the first and never
+  // re-read the file - leaving the previous document's editable lines on
+  // screen over the new one's page image. The annotations, edits and page
+  // position belong to the old file too.
+  const loadedId = file?.id ?? null;
+  useEffect(() => {
+    setTextPages(new Map());
+    setTextEdits(new Map());
+    setSelectedRunId(null);
+    setAnnotations([]);
+    setHistory([]);
+    setFuture([]);
+    setSelectedId(null);
+    setPageIndex(0);
+    setResult(null);
+  }, [loadedId]);
+
   // Render the current page at twice the zoom so the bitmap stays sharp when
   // the browser scales it down to the CSS size.
   useEffect(() => {
@@ -547,11 +568,14 @@ export default function EditTool() {
 
   if (result && file) {
     const filename = `${stripExtension(file.name)}-edited.pdf`;
+    // Both kinds of change count. Reading only `annotations` reported "0 edits
+    // applied" after a page of rewritten text, which reads as a failed save.
+    const changes = annotations.length + result.replaced;
     return (
       <ResultPanel
         filename={filename}
         size={result.blob.size}
-        detail={`${annotations.length} edit${annotations.length === 1 ? '' : 's'} applied`}
+        detail={`${changes} edit${changes === 1 ? '' : 's'} applied`}
         target={{ blob: result.blob, filename }}
         onReset={reset}
       >

@@ -43,8 +43,15 @@ const LOAD_OPTIONS = { ignoreEncryption: true } as const;
 export type TextRun = {
   id: string;
   pageIndex: number;
-  /** Index of the drawing operation in the page's content stream. */
-  operationIndex: number;
+  /**
+   * Every drawing operation in the content stream that composes this run.
+   *
+   * Not one index. pdf.js reports "Gulshan-e-Iqbal Block 19" as a single
+   * readable item, while the PDF may draw it as a dozen separate show-text
+   * operators split on kerning pairs. Deleting only the first left the rest of
+   * the original glyphs on the page underneath the replacement.
+   */
+  operationIndices: number[];
   /** The text as a reader sees it. */
   text: string;
   /** Baseline start, in display space (top-left origin, y down). */
@@ -145,11 +152,15 @@ function toHex(...channels: number[]): string {
 }
 
 /** Walks a content stream tracking everything needed to place and restyle text. */
+type PlacedOperation = Omit<TextRun, 'id' | 'pageIndex' | 'text' | 'width' | 'operationIndices'> & {
+  operationIndex: number;
+};
+
 function walkTextOperations(
   operations: Operation[],
   fontNames: Map<string, string>,
-): Omit<TextRun, 'id' | 'pageIndex' | 'text' | 'width'>[] {
-  const runs: Omit<TextRun, 'id' | 'pageIndex' | 'text' | 'width'>[] = [];
+): PlacedOperation[] {
+  const runs: PlacedOperation[] = [];
 
   let state = initialState();
   const stack: GraphicsState[] = [];
@@ -278,6 +289,9 @@ function walkTextOperations(
 
     runs.push({
       operationIndex: index,
+      // Placed entries stay one-per-operator; the grouping happens in
+      // extractPageText, which is the only place that knows how pdf.js
+      // divided the same text into readable items.
       x: full[4],
       y: full[5],
       fontSize: state.fontSize * scale,
@@ -411,8 +425,32 @@ export async function extractPageText(bytes: Uint8Array, pageIndex: number): Pro
       used.add(bestIndex);
 
       const run = placed[bestIndex]!;
+
+      // Claim every following operation that draws part of the same item.
+      //
+      // pdf.js merges what the PDF may split across many show-text operators,
+      // so the run extends from here to the end of the item's advance width.
+      // Anything on the same baseline that starts inside that span belongs to
+      // it, and must be removed with it - otherwise the leftovers stay on the
+      // page behind the replacement text.
+      const indices = [run.operationIndex];
+      const right = (itemX ?? 0) + (item.width || 0);
+
+      for (let index = bestIndex + 1; index < placed.length; index += 1) {
+        if (used.has(index)) continue;
+        const next = placed[index]!;
+        // A different baseline is a different run, and the operations are in
+        // stream order, so the first one that leaves this line ends the span.
+        if (Math.abs(next.y - run.y) > 0.75) break;
+        if (next.x < run.x - 0.5 || next.x > right + 0.5) break;
+        used.add(index);
+        indices.push(next.operationIndex);
+      }
+
+      const { operationIndex: _drop, ...rest } = run;
       runs.push({
-        ...run,
+        ...rest,
+        operationIndices: indices,
         id: `run-${(runCounter += 1)}`,
         pageIndex,
         text: item.str,
@@ -544,7 +582,7 @@ export async function applyTextEdits(
     if (parts.length === 0) continue;
 
     const operations = tokenizeContentStream(joinStreams(parts));
-    const doomed = new Set(list.map((entry) => entry.run.operationIndex));
+    const doomed = new Set(list.flatMap((entry) => entry.run.operationIndices));
 
     // The original glyphs are removed from the stream, not covered over.
     const kept = operations.filter((_, index) => !doomed.has(index));
