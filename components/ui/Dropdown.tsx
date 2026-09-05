@@ -1,6 +1,6 @@
 'use client';
 
-import { Combobox, Select, createListCollection, Portal } from '@ark-ui/react';
+import { Combobox, createListCollection, Portal } from '@ark-ui/react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useId, useMemo, useRef, type ReactNode } from 'react';
 
@@ -17,15 +17,13 @@ import { Icon } from './Icon';
  * near the bottom edge or inside a scroll container — are exactly the parts a
  * state machine already solves. All the markup and styling below is ours.
  *
- * Two machines sit behind one API:
- *
- *  - **Select** when the list is short and fixed. It gives native-feeling
- *    type-ahead without a text input to tab through.
- *  - **Combobox** when `searchable` is set, or when options load remotely.
- *
- * That is deliberate rather than an inconsistency: a combobox with a
- * permanently read-only input is a worse select, and a select cannot filter.
- * Callers see one component, one set of props and one visual language.
+ * Every instance is Ark's Combobox machine. The Select machine would suit the
+ * short fixed lists better, but it does not position its menu: its positioner
+ * carries `transform: translate3d(var(--x), var(--y), 0)` while the machine
+ * never defines those variables, so the menu lands at the top-left of the
+ * viewport at content width instead of under its trigger. Combobox sets them
+ * correctly through an otherwise identical portal/positioner/content
+ * structure, and typing in a short list simply filters it.
  */
 
 export type DropdownOption<T extends string = string> = {
@@ -86,8 +84,18 @@ const ROW_HEIGHT = 40;
 const ROW_HEIGHT_WITH_DESCRIPTION = 56;
 
 export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
-  const useCombobox = props.searchable || Boolean(props.onSearch);
-  return useCombobox ? <ComboboxDropdown {...props} /> : <SelectDropdown {...props} />;
+  // Everything routes through the Combobox machine.
+  //
+  // The Select machine does not position its menu: its positioner is rendered
+  // with `transform: translate3d(var(--x), var(--y), 0)` but the machine never
+  // defines --x/--y (nor --reference-width), so the transform is invalid and
+  // the menu lands at the top-left of the viewport at content width instead of
+  // under its trigger. The Combobox machine sets those variables correctly with
+  // an otherwise identical portal/positioner/content structure.
+  //
+  // Typing in a short list simply filters it, which is no worse than the
+  // type-ahead a select would have given.
+  return <ComboboxDropdown {...props} />;
 }
 
 // ------------------------------------------------------------------- shared
@@ -133,10 +141,19 @@ function controlTone(invalid?: boolean) {
     : 'border-line hover:border-line-strong data-[state=open]:border-accent';
 }
 
+/**
+ * The floating menu.
+ *
+ * The entrance animation is opacity-only, deliberately. The positioning engine
+ * places this element with a `transform`, so an entrance animation that also
+ * animates `transform` — especially with a fill mode that persists the final
+ * keyframe — is competing for the same property as the thing deciding where the
+ * menu goes. Fading in cannot collide with that.
+ */
 const menuClasses =
   'z-[80] overflow-hidden rounded-xl border border-line bg-surface shadow-card ' +
-  // Ark drives these attributes; the animation is transform+opacity only.
-  'data-[state=open]:motion-safe:animate-rise';
+  'motion-safe:transition-opacity motion-safe:duration-150 ' +
+  'data-[state=open]:opacity-100 data-[state=closed]:opacity-0';
 
 function Row({
   option,
@@ -309,147 +326,6 @@ function Status({ loading, empty }: { loading?: boolean; empty: string }) {
 }
 
 // ------------------------------------------------------------------- select
-
-function SelectDropdown<T extends string>(props: DropdownProps<T>) {
-  const generatedId = useId();
-  const controlId = props.id ?? generatedId;
-  const collection = useCollection(props.options);
-  const rows = useGrouped(props.options);
-  const hasDescriptions = props.options.some((option) => option.description);
-
-  const values = props.multiple ? props.value : props.value === null ? [] : [props.value];
-  const selected = props.options.filter((option) => values.includes(option.value));
-
-  return (
-    <FieldShell
-      label={props.label}
-      hint={props.hint}
-      error={props.error}
-      invalid={props.invalid}
-      className={props.className}
-      controlId={controlId}
-    >
-      <Select.Root
-        collection={collection}
-        value={values}
-        multiple={props.multiple}
-        disabled={props.disabled}
-        readOnly={props.readOnly}
-        invalid={props.invalid || Boolean(props.error)}
-        positioning={{ sameWidth: true, gutter: 6, flip: true, strategy: 'fixed' }}
-        onValueChange={(details) => {
-          if (props.multiple) props.onChange(details.value as T[]);
-          else props.onChange((details.value[0] as T) ?? null);
-        }}
-      >
-        <Select.Control>
-          <Select.Trigger
-            id={controlId}
-            className={cn(controlClasses, controlTone(props.invalid || Boolean(props.error)))}
-          >
-            <span className="min-w-0 flex-1 truncate py-2">
-              {selected.length === 0 ? (
-                <span className="text-muted">{props.placeholder ?? 'Choose…'}</span>
-              ) : props.renderValue ? (
-                props.renderValue(selected)
-              ) : (
-                <TriggerValue selected={selected} multiple={props.multiple} />
-              )}
-            </span>
-
-            {props.clearable && selected.length > 0 ? (
-              <Select.ClearTrigger
-                aria-label="Clear selection"
-                className="shrink-0 rounded p-0.5 text-muted hover:text-text"
-              >
-                <Icon name="close" size={16} />
-              </Select.ClearTrigger>
-            ) : null}
-
-            <Select.Indicator className="shrink-0 text-muted transition-transform data-[state=open]:rotate-180">
-              <Icon name="chevronDown" size={18} />
-            </Select.Indicator>
-          </Select.Trigger>
-        </Select.Control>
-
-        <Portal>
-          <Select.Positioner>
-            <Select.Content className={menuClasses}>
-              {props.options.length === 0 || props.loading ? (
-                <Status loading={props.loading} empty={props.emptyMessage ?? 'Nothing to choose'} />
-              ) : (
-                <OptionList
-                  rows={rows}
-                  hasDescriptions={hasDescriptions}
-                  renderRow={(row, index) =>
-                    row.kind === 'group' ? (
-                      <GroupHeading key={`g-${index}`} label={row.label} />
-                    ) : (
-                      <Select.Item key={row.option.value} item={row.option} className={itemClasses}>
-                        <Row
-                          option={row.option as DropdownOption<string>}
-                          selected={values.includes(row.option.value)}
-                          active={false}
-                          multiple={props.multiple}
-                          renderOption={
-                            props.renderOption as
-                              | ((option: DropdownOption<never>) => ReactNode)
-                              | undefined
-                          }
-                        />
-                      </Select.Item>
-                    )
-                  }
-                />
-              )}
-            </Select.Content>
-          </Select.Positioner>
-        </Portal>
-
-        {props.name ? <Select.HiddenSelect name={props.name} /> : null}
-      </Select.Root>
-    </FieldShell>
-  );
-}
-
-function TriggerValue({
-  selected,
-  multiple,
-}: {
-  selected: DropdownOption<string>[];
-  multiple?: boolean;
-}) {
-  if (!multiple) {
-    const only = selected[0]!;
-    return (
-      <span className="flex items-center gap-2">
-        {only.icon ? <span className="shrink-0 text-muted">{only.icon}</span> : null}
-        <span className="truncate">{only.label}</span>
-      </span>
-    );
-  }
-
-  // Two chips plus a count, so a long multi-selection cannot push the control
-  // out of its layout.
-  const shown = selected.slice(0, 2);
-  return (
-    <span className="flex flex-wrap items-center gap-1 py-1">
-      {shown.map((option) => (
-        <span
-          key={option.value}
-          className="rounded-md border border-line bg-sunken px-1.5 py-0.5 text-xs"
-        >
-          {option.label}
-        </span>
-      ))}
-      {selected.length > shown.length ? (
-        <span className="text-xs text-muted">+{selected.length - shown.length} more</span>
-      ) : null}
-    </span>
-  );
-}
-
-// ----------------------------------------------------------------- combobox
 
 function ComboboxDropdown<T extends string>(props: DropdownProps<T>) {
   const generatedId = useId();
