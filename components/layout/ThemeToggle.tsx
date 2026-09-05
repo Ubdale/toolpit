@@ -40,10 +40,19 @@ export function ThemeToggle() {
       aria-pressed={isDark}
       className="grid size-11 place-items-center rounded-xl border border-line text-muted transition-colors hover:bg-sunken hover:text-text"
     >
-      {/* Both glyphs render; CSS picks one, so there is no hydration mismatch
-          and no icon flash before the effect runs. */}
-      <Icon name="lightMode" size={20} className="dark:hidden" />
-      <Icon name="darkMode" size={20} className="hidden dark:block" />
+      {/* Both glyphs render and CSS picks one, so there is no hydration
+          mismatch and no icon flash before the effect runs.
+          The `hidden` sits on a wrapper rather than on the Icon itself: Icon
+          carries its own `inline-block`, `cn` is a plain joiner with no
+          conflict resolution, and two competing display utilities on one
+          element are settled by stylesheet order — which put both glyphs on
+          screen in light mode. A span has no display class to compete with. */}
+      <span className="row-start-1 col-start-1 dark:hidden">
+        <Icon name="lightMode" size={20} />
+      </span>
+      <span className="row-start-1 col-start-1 hidden dark:inline-flex">
+        <Icon name="darkMode" size={20} />
+      </span>
     </button>
   );
 }

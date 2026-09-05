@@ -98,6 +98,21 @@ export function CommandPalette({
     };
   }, [open]);
 
+  // Escape closes from anywhere, not only while the input holds focus. The
+  // keydown handler below sits on the input, so clicking a result or the
+  // backdrop used to leave the palette with no keyboard way out.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
   const go = useCallback(
     (href: string) => {
       onClose();
@@ -133,7 +148,15 @@ export function CommandPalette({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="fixed inset-0 bg-canvas/70 backdrop-blur-sm" aria-hidden="true" />
+      {/* The backdrop covers the viewport and sits above this container, so a
+          click outside the panel lands here rather than on the parent. It
+          therefore has to close the palette itself - testing target against
+          currentTarget on the container alone never fired. */}
+      <div
+        className="fixed inset-0 bg-canvas/70 backdrop-blur-sm"
+        aria-hidden="true"
+        onClick={onClose}
+      />
 
       <div
         role="dialog"
