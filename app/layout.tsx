@@ -91,6 +91,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         {/* The publisher behind every other structured-data node on the site. */}
         <script {...jsonLdProps(organizationJsonLd())} />
+        {/* Ads pay for the site and load on every page, which is why /privacy
+            states that unconditionally rather than hedging with "if ads are
+            shown". It sits here, in the server-rendered head, because that is
+            where AdSense's ownership check looks. Renders nothing until a
+            publisher ID is configured. */}
+        <AdSenseScript />
       </head>
       <body className="flex min-h-dvh flex-col">
         <a
@@ -112,10 +118,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             unmentioned. */}
         <Analytics />
         <SpeedInsights />
-        {/* Ads pay for the site and load on every page, which is why /privacy
-            states that unconditionally rather than hedging with "if ads are
-            shown". Renders nothing until a publisher ID is configured. */}
-        <AdSenseScript />
       </body>
     </html>
   );
