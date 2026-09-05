@@ -13,7 +13,7 @@
  * no ad script renders and /ads.txt returns 404 rather than serving a file that
  * declares a seller who is not us.
  */
-export const ADSENSE_PUBLISHER_ID = '';
+export const ADSENSE_PUBLISHER_ID = 'pub-1955444550229676';
 
 /** True once a real publisher ID is configured. */
 export const adsEnabled = ADSENSE_PUBLISHER_ID.startsWith('pub-');

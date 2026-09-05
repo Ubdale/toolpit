@@ -2,13 +2,11 @@ export const site = {
   name: 'Toolpit',
   url: 'https://toolpit.app',
   /**
-   * PLACEHOLDER — set this to a mailbox you actually read before launch.
-   * AdSense checks that a stated contact method works, and /contact, /about
-   * and /privacy all render this one constant, so there is a single line to
-   * change. Keep it a role address on the site's own domain rather than a
-   * personal inbox.
+   * Routed through Cloudflare Email Routing to a real inbox. /contact, /about,
+   * /privacy and the Organization JSON-LD all render this one constant, so a
+   * person and a crawler are never told different addresses.
    */
-  contactEmail: 'hello@toolpit.app',
+  contactEmail: 'contact@toolpit.app',
   promise: 'Your files never leave your device.',
   oneLiner:
     'Free browser tools for PDFs, images, and vectors — no upload, no signup, no watermark.',
