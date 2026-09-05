@@ -4,7 +4,7 @@ import { CategoryIndex } from '@/components/tool/CategoryIndex';
 import { pageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'Free Resume, Chart & QR Code Makers — No Signup | Toolpit',
+  title: 'Free Private Resume, Chart & QR Code Makers — No Signup | Toolpit',
   description:
     'Build a resume, a chart or a QR code in your browser and export it clean. Free, no signup, no watermark — and nothing you type is uploaded.',
   path: '/create',

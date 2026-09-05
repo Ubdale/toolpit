@@ -39,7 +39,7 @@ const whyPoints = [
   },
   {
     title: 'Private by design',
-    body: 'Files are processed on your device, never uploaded.',
+    body: 'Private by default: files are processed on your device, never uploaded.',
   },
   {
     title: 'No account needed',
@@ -60,12 +60,12 @@ export default function HomePage() {
             {site.promise}
           </p>
           <h1 className="mt-6 text-balance text-title sm:text-display">
-            Free online tools that never touch a server
+            Free, private tools that never touch a server
           </h1>
           <p className="mt-6 text-pretty text-lg text-muted sm:text-xl">
             Edit and sign PDFs, strip watermarks, resize images, clean up SVGs, build a resume,
-            chart your numbers — {tools.length} tools running entirely in your browser. No uploads,
-            no accounts, no watermarks, no limits.
+            chart your numbers — {tools.length} private tools running entirely in your browser.
+            Your files stay on your machine: no uploads, no accounts, no watermarks, no limits.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <ButtonLink href="#tools" size="lg">

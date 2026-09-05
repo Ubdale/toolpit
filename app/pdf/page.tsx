@@ -4,7 +4,7 @@ import { CategoryIndex } from '@/components/tool/CategoryIndex';
 import { pageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'Free PDF Tools — No Upload, No Signup, No Watermark | Toolpit',
+  title: 'Free Private PDF Tools — No Upload, No Signup, No Watermark | Toolpit',
   description:
     'Merge, split, rotate, edit, watermark, compress and convert PDFs in your browser. Every Toolpit PDF tool is free and processes files on your device — nothing is uploaded.',
   path: '/pdf',

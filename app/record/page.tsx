@@ -4,7 +4,7 @@ import { CategoryIndex } from '@/components/tool/CategoryIndex';
 import { pageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'Free Screen Recording — No Download, No Watermark | Toolpit',
+  title: 'Free Private Screen Recording — No Download, No Watermark | Toolpit',
   description:
     'Record and annotate your screen in the browser. Free, no signup, no watermark, and the recording is built on your device rather than uploaded.',
   path: '/record',

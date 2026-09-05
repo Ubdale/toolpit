@@ -4,7 +4,7 @@ import { CategoryIndex } from '@/components/tool/CategoryIndex';
 import { pageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'Free Image Tools — Resize, Crop, Convert & AI | Toolpit',
+  title: 'Free Private Image Tools — Resize, Crop, Convert & AI | Toolpit',
   description:
     'Resize, crop and convert images, or remove backgrounds and upscale with on-device AI. Free, no signup, no watermark — your photos are never uploaded.',
   path: '/image',

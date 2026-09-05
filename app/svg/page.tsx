@@ -4,7 +4,7 @@ import { CategoryIndex } from '@/components/tool/CategoryIndex';
 import { pageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'Free SVG Tools — Optimize SVG & Generate Favicons | Toolpit',
+  title: 'Free Private SVG Tools — Optimize SVG & Generate Favicons | Toolpit',
   description:
     'Minify bloated SVG exports and build a complete favicon set, all in your browser. Free, private, no upload and no watermark.',
   path: '/svg',

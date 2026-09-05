@@ -107,8 +107,8 @@ export function CategoryIndex({
         </section>
 
         <p className="mt-12 max-w-3xl text-sm text-muted">
-          {site.promise} Every tool on this page runs in your browser using WebAssembly, so your
-          files are never uploaded, never stored, and never seen by us.
+          {site.promise} Every tool on this page runs privately in your browser using
+          WebAssembly, so your files are never uploaded, never stored, and never seen by us.
         </p>
       </Container>
     </>
