@@ -11,7 +11,7 @@ import { Icon } from '@/components/ui/Icon';
 /**
  * Search across every tool, opened with ⌘K / Ctrl-K or the header button.
  *
- * At twenty-six tools the category nav stopped being enough: knowing you want
+ * Past a couple of dozen tools the category nav stopped being enough: knowing you want
  * "the one that makes a PDF smaller" should not require guessing which of five
  * sections it lives in. Matching runs over the tool's name, summary and its
  * SEO keywords, so "shrink", "reduce size" and "compress" all find the same
@@ -175,7 +175,7 @@ export function CommandPalette({
               setActive(0);
             }}
             onKeyDown={onKeyDown}
-            placeholder="Search 26 tools — try “shrink”, “sign”, “resize”…"
+            placeholder={`Search ${tools.length} tools — try “shrink”, “sign”, “resize”…`}
             aria-label="Search tools"
             aria-controls={listId}
             aria-activedescendant={matches[active] ? `${listId}-${active}` : undefined}

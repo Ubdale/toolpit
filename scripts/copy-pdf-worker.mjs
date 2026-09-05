@@ -37,13 +37,3 @@ for (const asset of ['ort-wasm-simd-threaded.wasm', 'ort-wasm-simd-threaded.mjs'
     `ONNX Runtime ${path.extname(asset).slice(1)}`,
   );
 }
-
-// VTracer ships wasm-pack's "bundler" target, whose entry is a raw ESM `.wasm`
-// import. Rather than depend on the bundler supporting that, lib/vector/trace.ts
-// instantiates the module by hand against this copy.
-const vtracer = path.dirname(require.resolve('vtracer-webapp/vtracer_webapp_bg.js'));
-await copyInto(
-  path.join(vtracer, 'vtracer_webapp_bg.wasm'),
-  path.join(publicDir, 'vtracer', 'vtracer_webapp_bg.wasm'),
-  'VTracer wasm',
-);

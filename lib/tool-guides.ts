@@ -328,32 +328,6 @@ export const guides: Record<string, ToolGuide> = {
   },
 
   // ------------------------------------------------------------------- SVG
-  '/svg/image-to-svg': {
-    steps: [
-      'Drop in a PNG or JPG — a logo, icon or high-contrast graphic works best.',
-      'Adjust the tracing settings and watch the preview update.',
-      'Export as SVG, PDF, Illustrator .ai or EPS.',
-    ],
-    faqs: [
-      { question: 'Is my image uploaded?', answer: PRIVACY_ANSWER },
-      {
-        question: 'Will a photograph trace well?',
-        answer:
-          'Rarely. Tracing turns areas of similar colour into filled shapes, which suits logos, icons, line art and screenshots. A photograph has thousands of subtle gradients, so the result is either a posterised approximation or an enormous file — usually both.',
-      },
-      {
-        question: 'Is the .ai file a real Illustrator file?',
-        answer:
-          'It is a PDF-compatible .ai, which is the format Illustrator itself has written for over twenty years. Illustrator, Affinity Designer, Inkscape and CorelDRAW all open it and see editable vector paths.',
-      },
-      {
-        question: 'Why does my traced logo have slightly wobbly edges?',
-        answer:
-          'The tracer is following the pixel boundary, and a small or anti-aliased source has soft, uneven edges to follow. Start from the largest version of the image you have, and raise the smoothing to trade a little accuracy for cleaner curves.',
-      },
-    ],
-  },
-
   '/svg/optimize': {
     steps: [
       'Paste your SVG markup, or drop in an .svg file.',

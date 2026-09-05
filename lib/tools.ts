@@ -173,7 +173,7 @@ export const tools: Tool[] = [
     intro:
       'Turn each page of your PDF into a high-quality image you can reuse anywhere. Pick your format and resolution, then download the whole set — all done locally, nothing uploaded.',
     keywords: ['pdf to jpg', 'pdf to png', 'pdf to image', 'convert pdf to images'],
-    related: ['/pdf/images-to-pdf', '/pdf/split', '/svg/image-to-svg', '/pdf/compress'],
+    related: ['/pdf/images-to-pdf', '/pdf/split', '/pdf/compress'],
   },
 
   {
@@ -209,28 +209,6 @@ export const tools: Tool[] = [
 
   // ---------------------------------------------------------------- Phase 2
   {
-    href: '/svg/image-to-svg',
-    category: 'svg',
-    status: 'live',
-    name: 'Image to vector',
-    summary: 'Trace a PNG or JPG to SVG, PDF, AI or EPS.',
-    title: 'Convert PNG & JPG to SVG, AI, EPS & PDF Free | Toolpit',
-    description:
-      'Trace a PNG or JPG into clean vector artwork and export it as SVG, PDF, Illustrator .ai or EPS. Free, no upload, no watermark — your image never leaves your device.',
-    h1: 'Convert an image to vector',
-    intro:
-      'Turn a logo, icon, photo, or graphic into clean, infinitely scalable artwork. Toolpit traces your image into real vector paths locally in your browser, then exports it as an SVG, a true vector PDF, an Illustrator-compatible .ai, or an EPS for print — without uploading a single pixel.',
-    keywords: [
-      'png to svg',
-      'jpg to svg',
-      'image to vector',
-      'png to ai',
-      'image to eps',
-      'convert image to illustrator',
-    ],
-    related: ['/svg/optimize', '/svg/favicon-generator', '/pdf/to-images', '/image/upscale'],
-  },
-  {
     href: '/svg/optimize',
     category: 'svg',
     status: 'live',
@@ -243,7 +221,7 @@ export const tools: Tool[] = [
     intro:
       'Strip out editor cruft, redundant metadata, and unnecessary precision to make your SVG dramatically smaller without changing how it looks. Paste or drop your SVG in and copy the optimized version straight back out — nothing is uploaded.',
     keywords: ['svg optimizer', 'minify svg', 'compress svg', 'svgo online'],
-    related: ['/svg/image-to-svg', '/svg/favicon-generator', '/pdf/compress', '/image/upscale'],
+    related: ['/svg/favicon-generator', '/pdf/compress', '/image/upscale'],
   },
   {
     href: '/svg/favicon-generator',
@@ -258,7 +236,7 @@ export const tools: Tool[] = [
     intro:
       'Drop in any image and get a complete favicon set — every size modern browsers and devices need, plus the HTML to drop into your site. Generated locally in your browser, so your artwork is never uploaded.',
     keywords: ['favicon generator', 'favicon package', 'ico generator', 'apple touch icon'],
-    related: ['/svg/image-to-svg', '/svg/optimize', '/image/remove-background', '/pdf/to-images'],
+    related: ['/svg/optimize', '/image/remove-background', '/pdf/to-images'],
   },
 
   // ---------------------------------------------------------------- Phase 3
@@ -303,7 +281,6 @@ export const tools: Tool[] = [
     related: [
       '/image/remove-background',
       '/image/remove-object',
-      '/svg/image-to-svg',
       '/pdf/to-images',
     ],
   },
@@ -474,7 +451,7 @@ export const tools: Tool[] = [
       'image converter',
       'bulk image converter',
     ],
-    related: ['/image/resize', '/image/crop', '/pdf/images-to-pdf', '/svg/image-to-svg'],
+    related: ['/image/resize', '/image/crop', '/pdf/images-to-pdf'],
   },
   {
     href: '/image/crop',

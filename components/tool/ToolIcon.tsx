@@ -25,8 +25,6 @@ const TOOL_ICONS: Record<string, IconName> = {
   '/pdf/watermark': 'toolWatermark',
   '/pdf/page-numbers': 'toolPageNumbers',
   '/pdf/remove-watermark': 'toolRemoveWatermark',
-
-  '/svg/image-to-svg': 'toolTrace',
   '/svg/optimize': 'toolOptimizeSvg',
   '/svg/favicon-generator': 'toolFavicon',
 

@@ -106,7 +106,6 @@ export const ICONS = {
   toolWatermark: 'branding_watermark',
   toolPageNumbers: 'format_list_numbered',
   toolRemoveWatermark: 'layers_clear',
-  toolTrace: 'shape_line',
   toolOptimizeSvg: 'wand_stars',
   toolFavicon: 'tab',
   toolRemoveBackground: 'background_replace',
